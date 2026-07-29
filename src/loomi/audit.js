@@ -3105,7 +3105,7 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     }
   })();
 
-  progress("overview", "Loading project overview (+ Glean in parallel)…", 4);
+  progress("overview", "Loading project overview…", 4);
   const overview = await loomi.callTool("get_project_overview", {
     project_id: projectId,
   });
@@ -3197,7 +3197,7 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     onProgress,
   });
 
-  progress("glean", "Finishing Glean client documents…", 94);
+  progress("glean", "Loading client documents…", 94);
   const gleanResult = await gleanPromise;
   clientBrief = gleanResult.brief;
   Object.assign(gleanMeta, gleanResult.meta);
@@ -3274,7 +3274,7 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
   };
 
   if (glean && gleanMeta.connected) {
-    progress("aiInsights", "Generating AI recommendations via Glean…", 98);
+    progress("aiInsights", "Generating AI recommendations…", 98);
     try {
       const { enrichFindingsWithGlean } = await import("../glean/aiInsights.js");
       aiInsights = await enrichFindingsWithGlean(glean, {
