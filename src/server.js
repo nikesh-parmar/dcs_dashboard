@@ -6,6 +6,7 @@ import { loadConfig } from "./config.js";
 import { MultiRegionLoomi, parseMcpEndpoints } from "./loomi/multiClient.js";
 import { runProjectAudit } from "./loomi/audit.js";
 import { createGleanClient, fetchClientBrief } from "./glean/clientBrief.js";
+import { resolveUserIdentity } from "./loomi/userIdentity.js";
 
 dotenv.config();
 
@@ -110,10 +111,12 @@ async function connectAllMcps() {
 app.get("/api/status", (_req, res) => {
   const loomiStatus = loomi.getStatus();
   const gleanStatus = glean.getStatus();
+  const user = resolveUserIdentity({ loomi, glean });
   res.json({
     ...loomiStatus,
     glean: gleanStatus,
     allMcpsConnected: Boolean(loomiStatus.allConnected && gleanStatus.connected),
+    user,
   });
 });
 
