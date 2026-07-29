@@ -624,7 +624,6 @@ function renderAudit(data) {
   renderFindings(data.findings || []);
   renderAdoptionOpportunities(filterGapAnalysisItems(data.adoptionOpportunities || []));
   renderNextBestActions(data.aiInsights || null, data.adoptionOpportunities || []);
-  renderVerticalAssessment(data.verticalAssessment || null);
   renderUseCaseCenter(data.adoptionOpportunities || [], data.scenarios || [], data.verticalAssessment || null);
   renderDataQuality(data.dataQuality || {});
   renderSuccessPlanning(data);
