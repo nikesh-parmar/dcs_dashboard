@@ -567,102 +567,180 @@ a:hover {
   line-height: 1.4;
 }
 
-.hub-docs-chat {
-  margin: 0 0 0.9rem;
-  display: grid;
-  gap: 0.55rem;
-}
-
-.hub-chat-log {
-  max-height: 220px;
-  overflow: auto;
-  display: grid;
-  gap: 0.45rem;
-  padding: 0.55rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.hub-chat-bubble {
-  padding: 0.55rem 0.65rem;
-  border-radius: 12px;
-  font-size: 0.84rem;
-  line-height: 1.4;
-  white-space: pre-wrap;
-}
-
-.hub-chat-bot {
-  background: rgba(255, 255, 255, 0.1);
-  color: #f5f5f5;
-}
-
-.hub-chat-user {
-  background: var(--br-yellow);
-  color: var(--br-black);
-  justify-self: end;
-  max-width: 92%;
-}
-
-.hub-chat-sources {
-  margin: 0.35rem 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.2rem;
-  font-size: 0.75rem;
-}
-
-.hub-chat-sources a {
-  color: var(--br-yellow) !important;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.hub-chat-form {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.45rem;
-}
-
-.hub-chat-form input {
-  width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font: inherit;
-  padding: 0.65rem 0.85rem;
-}
-
-.hub-chat-form input::placeholder {
-  color: #a3a3a3;
-}
-
-.hub-chat-form input:focus {
-  outline: 2px solid rgba(255, 204, 0, 0.55);
-  border-color: var(--br-yellow);
-}
-
 .hub-support-actions {
   display: grid;
   gap: 0.55rem;
 }
 
-.hub-support-actions .btn {
-  border-color: rgba(255, 255, 255, 0.35);
-  color: #fff;
-  background: transparent;
-}
-
-.hub-support-actions .btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
+.hub-support-actions .btn-primary {
+  border-color: transparent;
+  color: var(--br-black);
 }
 
 .hub-support-link {
   color: var(--br-yellow) !important;
   font-size: 0.88rem;
   text-decoration: none;
+}
+
+.loomi-assistant {
+  position: fixed;
+  right: 1.15rem;
+  bottom: 1.15rem;
+  z-index: 80;
+  display: grid;
+  justify-items: end;
+  gap: 0.7rem;
+}
+
+.loomi-assistant-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--br-black);
+  color: #fff;
+  padding: 0.75rem 1rem 0.75rem 0.85rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 14px 36px rgba(17, 17, 17, 0.28);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.loomi-assistant-toggle:hover {
+  transform: translateY(-1px);
+  background: #222;
+}
+
+.loomi-assistant-toggle-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--br-yellow);
+  color: var(--br-black);
+  font-size: 0.9rem;
+}
+
+.loomi-assistant-toggle-label {
+  font-size: 0.92rem;
+}
+
+.loomi-assistant-panel {
+  width: min(24rem, calc(100vw - 1.5rem));
+  max-height: min(32rem, calc(100vh - 6.5rem));
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: #fff;
+  border: 1px solid var(--br-line);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(17, 17, 17, 0.22);
+}
+
+.loomi-assistant-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: var(--br-yellow);
+}
+
+.loomi-assistant-kicker {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5a4a00;
+}
+
+.loomi-assistant-head h2 {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+}
+
+.loomi-assistant-close {
+  border: none;
+  background: rgba(17, 17, 17, 0.08);
+  color: var(--br-black);
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.loomi-assistant-log {
+  overflow: auto;
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+  padding: 0.85rem;
+  background: #fafafa;
+}
+
+.loomi-chat-bubble {
+  padding: 0.65rem 0.75rem;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  max-width: 95%;
+}
+
+.loomi-chat-bot {
+  background: #fff;
+  border: 1px solid var(--br-line);
+  color: var(--br-ink);
+  justify-self: start;
+}
+
+.loomi-chat-user {
+  background: var(--br-black);
+  color: #fff;
+  justify-self: end;
+}
+
+.loomi-chat-docs {
+  display: inline-block;
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.loomi-chat-docs:hover {
+  color: var(--br-yellow-deep);
+}
+
+.loomi-assistant-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--br-line);
+  background: #fff;
+}
+
+.loomi-assistant-form input {
+  width: 100%;
+  border: 1px solid var(--br-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--br-ink);
+  font: inherit;
+  padding: 0.65rem 0.85rem;
+}
+
+.loomi-assistant-form input:focus {
+  outline: 2px solid rgba(255, 204, 0, 0.55);
+  border-color: var(--br-yellow-deep);
 }
 
 .btn-ghost {
@@ -678,6 +756,22 @@ a:hover {
   color: var(--br-black);
   background: transparent;
   transform: none;
+}
+
+@media (max-width: 640px) {
+  .loomi-assistant {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+
+  .loomi-assistant-toggle-label {
+    display: none;
+  }
+
+  .loomi-assistant-toggle {
+    padding: 0.75rem;
+    border-radius: 50%;
+  }
 }
 
 h1,

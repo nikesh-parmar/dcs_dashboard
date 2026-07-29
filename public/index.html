@@ -131,26 +131,9 @@
 
           <article class="hub-card hub-card-support">
             <h2>Need a hand?</h2>
-            <p>Ask about Bloomreach docs, or escalate to Support / a CSM.</p>
-            <div class="hub-docs-chat" id="hubDocsChat">
-              <div class="hub-chat-log" id="hubChatLog" aria-live="polite">
-                <div class="hub-chat-bubble hub-chat-bot">
-                  Ask me anything about Bloomreach Engagement docs — scenarios, tracking, deliverability, and more.
-                </div>
-              </div>
-              <form class="hub-chat-form" id="hubChatForm">
-                <input
-                  id="hubChatInput"
-                  type="text"
-                  autocomplete="off"
-                  placeholder="Ask a docs question…"
-                  aria-label="Ask a Bloomreach docs question"
-                />
-                <button type="submit" class="btn btn-primary" id="hubChatSend">Ask</button>
-              </form>
-            </div>
+            <p>Get further support — docs, escalation or a human CSM. Or ask Loomi Assistant (bottom right).</p>
             <div class="hub-support-actions">
-              <button type="button" class="btn" data-hub-nav="success">Get further support</button>
+              <button type="button" class="btn btn-primary" data-hub-nav="success">Get further support</button>
               <a class="hub-support-link" href="https://support.bloomreach.com/hc/en-us/articles/18550445647517-How-To-Contact-Support" target="_blank" rel="noopener noreferrer">
                 Bloomreach Support
               </a>
@@ -342,6 +325,37 @@
       </div>
     </section>
   </main>
+
+  <div id="loomiAssistant" class="loomi-assistant">
+    <div id="loomiAssistantPanel" class="loomi-assistant-panel hidden" role="dialog" aria-labelledby="loomiAssistantTitle" aria-hidden="true">
+      <header class="loomi-assistant-head">
+        <div>
+          <p class="loomi-assistant-kicker">Powered by Loomi</p>
+          <h2 id="loomiAssistantTitle">Loomi Assistant</h2>
+        </div>
+        <button type="button" id="loomiAssistantClose" class="loomi-assistant-close" aria-label="Close Loomi Assistant">×</button>
+      </header>
+      <div class="loomi-assistant-log" id="hubChatLog" aria-live="polite">
+        <div class="loomi-chat-bubble loomi-chat-bot">
+          Ask a short question about Bloomreach Engagement. I’ll reply briefly and link the docs.
+        </div>
+      </div>
+      <form class="loomi-assistant-form" id="hubChatForm">
+        <input
+          id="hubChatInput"
+          type="text"
+          autocomplete="off"
+          placeholder="Ask Loomi Assistant…"
+          aria-label="Ask Loomi Assistant"
+        />
+        <button type="submit" class="btn btn-primary" id="hubChatSend">Send</button>
+      </form>
+    </div>
+    <button type="button" id="loomiAssistantToggle" class="loomi-assistant-toggle" aria-expanded="false" aria-controls="loomiAssistantPanel">
+      <span class="loomi-assistant-toggle-icon" aria-hidden="true">💬</span>
+      <span class="loomi-assistant-toggle-label">Loomi Assistant</span>
+    </button>
+  </div>
 
   <footer class="site-footer">
     <div class="footer-brand">

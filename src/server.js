@@ -291,6 +291,7 @@ app.post("/api/docs-chat", async (req, res) => {
     }
     res.json({
       answer: result.answer,
+      docsLink: result.docsLink || null,
       sources: result.sources || [],
     });
   } catch (err) {
