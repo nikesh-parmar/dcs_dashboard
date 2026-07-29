@@ -13,7 +13,6 @@ const els = {
   findingsList: document.getElementById("findingsList"),
   adoptionList: document.getElementById("adoptionList"),
   nextBestActionList: document.getElementById("nextBestActionList"),
-  verticalAssessment: document.getElementById("verticalAssessment"),
   useCaseCenterList: document.getElementById("useCaseCenterList"),
   dataQualitySummary: document.getElementById("dataQualitySummary"),
   dataQualityList: document.getElementById("dataQualityList"),
@@ -1111,72 +1110,6 @@ const USE_CASE_CENTER = [
     url: "https://documentation.bloomreach.com/engagement/docs/location-based-social-proof-banner",
   },
 ];
-
-function renderVerticalAssessment(assessment) {
-  const el = els.verticalAssessment;
-  if (!el) return;
-  if (!assessment?.available) {
-    el.classList.add("hidden");
-    el.innerHTML = "";
-    return;
-  }
-
-  const vertical = assessment.vertical || {};
-  const gaps = Array.isArray(assessment.topGaps) ? assessment.topGaps : [];
-  const useCases = Array.isArray(assessment.useCases) ? assessment.useCases : [];
-
-  el.classList.remove("hidden");
-  el.innerHTML = `
-    <div class="vertical-assessment-head">
-      <h3>Vertical use-case check</h3>
-      <span class="vertical-confidence conf-${escapeHtml(vertical.confidence || "low")}">${escapeHtml(
-        vertical.confidence || "low"
-      )} confidence</span>
-    </div>
-    <p class="vertical-assessment-summary">${escapeHtml(assessment.coverageSummary || "")}</p>
-    ${
-      assessment.aiNarrative
-        ? `<p class="vertical-assessment-narrative">${escapeHtml(assessment.aiNarrative)}</p>`
-        : ""
-    }
-    ${
-      vertical.rationale
-        ? `<p class="muted">Vertical: <strong>${escapeHtml(vertical.label || assessment.packLabel || "")}</strong> — ${escapeHtml(
-            vertical.rationale
-          )}</p>`
-        : ""
-    }
-    <div class="vertical-usecase-grid">
-      ${useCases
-        .map(
-          (uc) => `
-        <article class="vertical-usecase status-${escapeHtml(uc.status)}">
-          <span class="vertical-usecase-status">${escapeHtml(uc.status)}</span>
-          <strong>${escapeHtml(uc.title)}</strong>
-          <span class="muted">${escapeHtml(uc.priority)} priority</span>
-        </article>`
-        )
-        .join("")}
-    </div>
-    ${
-      gaps.length
-        ? `<div class="vertical-gaps">
-            <h4>Top gaps for feedback</h4>
-            <ul>${gaps
-              .map(
-                (g) => `<li>
-                  <strong>${escapeHtml(g.title)}</strong>
-                  ${g.whyItMatters ? ` — ${escapeHtml(g.whyItMatters)}` : ""}
-                  ${g.adopt ? `<br/><em>Adopt:</em> ${escapeHtml(g.adopt)}` : ""}
-                </li>`
-              )
-              .join("")}</ul>
-          </div>`
-        : ""
-    }
-    <p class="muted vertical-assessment-source">Source: ${escapeHtml(assessment.source || "rules")}</p>
-  `;
-}
 
 function renderUseCaseCenter(adoptionItems = [], scenarios = [], verticalAssessment = null) {
   if (!els.useCaseCenterList) return;
