@@ -1,0 +1,19 @@
+{
+  "name": "loomi-data-audit",
+  "version": "1.0.0",
+  "description": "Bloomreach Engagement data audit via Loomi Connect MCP — project picker, overview KPIs, events & attributes tables",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0"
+  }
+}

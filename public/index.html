@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Marketing Setup & Adoption Audit | Loomi Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="topbar">
+    <span>Powered by Loomi Connect &amp; Glean</span>
+    <a href="https://documentation.bloomreach.com/engagement" target="_blank" rel="noopener noreferrer">Engagement docs</a>
+  </div>
+
+  <header class="site-header">
+    <div class="brand">
+      <a class="logo" href="/" aria-label="Marketing Setup & Adoption Audit">
+        <img class="product-icon" src="/logo-engagement.svg" width="32" height="32" alt="" />
+        <span class="product-title">Marketing Setup & Adoption Audit</span>
+      </a>
+    </div>
+    <div class="header-actions">
+      <span id="connectionBadge" class="badge">Checking…</span>
+      <button id="connectBtn" type="button" class="btn btn-primary">Connect</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <h1>Marketing Setup & Adoption Audit</h1>
+      <p class="hero-copy">Select a project to audit your data, scenarios &amp; adoption in one view</p>
+    </section>
+
+    <section class="controls" aria-label="Project selection">
+      <label>
+        Organization
+        <select id="orgSelect" disabled>
+          <option value="">Connect first</option>
+        </select>
+      </label>
+      <label>
+        Project
+        <select id="projectSelect" disabled>
+          <option value="">Select an organization</option>
+        </select>
+      </label>
+      <button id="auditBtn" type="button" class="btn btn-dark" disabled>Run audit</button>
+    </section>
+
+    <p id="statusMsg" class="status" role="status"></p>
+
+    <div id="auditProgress" class="audit-progress hidden" aria-live="polite">
+      <div id="auditWaitGame" class="audit-wait-game" aria-label="Noughts and crosses while the audit runs">
+        <div class="audit-wait-game-head">
+          <div>
+            <p class="audit-wait-game-eyebrow">While you wait</p>
+            <h3 class="audit-wait-game-title">Noughts &amp; crosses</h3>
+          </div>
+          <span id="auditGameStatus" class="audit-game-status">You are yellow · Computer is teal</span>
+        </div>
+        <div id="auditGameBoard" class="ttt-board" role="grid" aria-label="Noughts and crosses board"></div>
+        <div class="audit-wait-game-actions">
+          <button type="button" id="auditGameReset" class="btn btn-secondary">New game</button>
+        </div>
+      </div>
+      <div class="audit-progress-head">
+        <span id="auditProgressLabel">Running audit…</span>
+        <span id="auditProgressPct">0%</span>
+      </div>
+      <div class="audit-progress-track">
+        <div id="auditProgressBar" class="audit-progress-bar" style="width: 0%"></div>
+      </div>
+      <p id="auditProgressDetail" class="muted audit-progress-detail">Starting…</p>
+    </div>
+
+    <section id="resultsSection" class="panel hidden">
+      <div id="clientBriefCard" class="client-brief hidden">
+        <div class="client-brief-head">
+          <div>
+            <p class="client-brief-eyebrow">Client context · Glean</p>
+            <h2 id="clientBriefTitle">Client</h2>
+          </div>
+          <span id="clientBriefVertical" class="client-brief-vertical hidden"></span>
+        </div>
+        <p id="clientBriefOverview" class="client-brief-copy"></p>
+        <div id="verticalAssessment" class="vertical-assessment hidden"></div>
+        <div id="clientBriefBody" class="client-brief-body hidden"></div>
+        <p id="clientBriefSources" class="muted client-brief-sources"></p>
+        <div id="clientBriefAuth" class="client-brief-auth hidden">
+          <p class="muted">Glean is not connected. Use <strong>Connect</strong> in the header to authorize Loomi Connect and Glean.</p>
+        </div>
+      </div>
+
+      <div class="panel-head">
+        <div>
+          <h2>Project overview</h2>
+          <p id="projectMeta" class="muted"></p>
+        </div>
+        <button id="exportHtmlBtn" type="button" class="btn btn-secondary" disabled title="Download an HTML report you can upload to Google Docs">
+          Export HTML for Google Docs
+        </button>
+      </div>
+
+      <div class="tabs primary-tabs" role="tablist" aria-label="Audit results">
+        <button type="button" class="tab active" data-primary-tab="data" role="tab" aria-selected="true">Data</button>
+        <button type="button" class="tab" data-primary-tab="scenarios" role="tab" aria-selected="false">Scenarios &amp; AI Adoption</button>
+        <button type="button" class="tab" data-primary-tab="other" role="tab" aria-selected="false">Other Checks</button>
+      </div>
+
+      <div id="primary-data" class="primary-panel">
+        <div class="overview-blocks overview-blocks-single">
+          <section class="overview-block">
+            <h3>Data overview</h3>
+            <div id="kpiData" class="kpi-grid"></div>
+          </section>
+        </div>
+
+        <div class="results-subsection results-section-card">
+          <div class="panel-head subsection-head">
+            <h3>Data inventory</h3>
+            <p class="muted">Identifiers, consent, properties, events, quality, expiry, mapping, catalogs, and imports</p>
+          </div>
+
+          <div class="data-inventory">
+            <div class="tabs data-tabs" role="tablist" aria-label="Data details">
+              <button type="button" class="tab active" data-tab="identifiers" role="tab" aria-selected="true">Identifiers</button>
+              <button type="button" class="tab" data-tab="consents" role="tab" aria-selected="false">Consent</button>
+              <button type="button" class="tab" data-tab="attributes" role="tab" aria-selected="false">Customer properties</button>
+              <button type="button" class="tab" data-tab="events" role="tab" aria-selected="false">Events</button>
+              <button type="button" class="tab" data-tab="data-quality" role="tab" aria-selected="false">Data quality</button>
+              <button type="button" class="tab" data-tab="data-expiry" role="tab" aria-selected="false">Data expiry</button>
+              <button type="button" class="tab" data-tab="mapping" role="tab" aria-selected="false">Data mapping</button>
+              <button type="button" class="tab" data-tab="catalogs" role="tab" aria-selected="false">Catalogs</button>
+              <button type="button" class="tab" data-tab="imports" role="tab" aria-selected="false">Imports</button>
+            </div>
+
+          <div id="tab-identifiers" class="tab-panel">
+            <div class="table-tools">
+              <p class="muted section-blurb">Hard vs soft IDs used for customer identity resolution</p>
+              <span id="identifiersCount" class="muted"></span>
+            </div>
+            <div class="table-wrap">
+              <table id="identifiersTable">
+                <thead>
+                  <tr>
+                    <th>Identifier</th>
+                    <th>Type</th>
+                    <th>Lowercase</th>
+                    <th>Trim</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="tab-consents" class="tab-panel hidden">
+            <div class="table-tools">
+              <p class="muted section-blurb">Consent categories configured in the project (customer true/false counts are not available via Loomi)</p>
+              <span id="consentsCount" class="muted"></span>
+            </div>
+            <div class="table-wrap">
+              <table id="consentsTable">
+                <thead>
+                  <tr>
+                    <th>Category ID</th>
+                    <th>Name</th>
+                    <th>Legitimate interest</th>
+                    <th>Mapped standard</th>
+                    <th>Sources</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="tab-attributes" class="tab-panel hidden">
+            <div class="table-tools">
+              <input id="attributesFilter" type="search" placeholder="Filter customer properties…" />
+              <span id="attributesCount" class="muted"></span>
+            </div>
+            <div class="table-wrap">
+              <table id="attributesTable">
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>Source</th>
+                    <th>Used</th>
+                    <th>Private / PII</th>
+                    <th>Temporary</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="tab-events" class="tab-panel hidden">
+            <div class="table-tools">
+              <p class="muted section-blurb">Event counts for the last 30 days and all time</p>
+              <input id="eventsFilter" type="search" placeholder="Filter events or attributes…" />
+              <div class="events-class-filters" role="group" aria-label="Event class filters">
+                <label class="chip-filter"><input type="checkbox" id="eventsClassSystem" checked /> System</label>
+                <label class="chip-filter"><input type="checkbox" id="eventsClassCommerce" checked /> Commerce</label>
+                <label class="chip-filter"><input type="checkbox" id="eventsClassCustom" checked /> Custom</label>
+              </div>
+              <span id="eventsCount" class="muted"></span>
+            </div>
+            <div class="table-wrap">
+              <table id="eventsTable">
+                <thead>
+                  <tr>
+                    <th>Event</th>
+                    <th>Class</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th>Used</th>
+                    <th>
+                      <button type="button" class="sort-btn" data-events-sort="propertyCount">
+                        Properties <span class="sort-ind" aria-hidden="true"></span>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" class="sort-btn" data-events-sort="eventCount30">
+                        30d <span class="sort-ind" aria-hidden="true"></span>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" class="sort-btn" data-events-sort="eventCount">
+                        All time <span class="sort-ind" aria-hidden="true"></span>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" class="sort-btn" data-events-sort="firstSeen">
+                        First seen <span class="sort-ind" aria-hidden="true"></span>
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="tab-data-quality" class="tab-panel hidden">
+            <div class="table-tools">
+              <p class="muted section-blurb" id="dataQualityBlurb">
+                Schema name heuristics plus sample customer property values (Loomi does not return example_values reliably).
+              </p>
+              <span id="dataQualityCount" class="muted"></span>
+            </div>
+            <div class="table-wrap">
+              <table id="dataQualityTable">
+                <thead>
+                  <tr>
+                    <th>Severity</th>
+                    <th>Kind</th>
+                    <th>Scope</th>
+                    <th>Property</th>
+                    <th>Declared</th>
+                    <th>Observed / suggested</th>
+                    <th>Detail</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="tab-data-expiry" class="tab-panel hidden">
+            <div class="table-tools">
+              <p class="muted section-blurb">
+                Event retention / expiration is set in Engagement Data Manager. Those settings are not returned by Loomi Connect.
+              </p>
+            </div>
+            <div id="dataExpiryPanel" class="expiry-panel"></div>
+          </div>
+
+          <div id="tab-mapping" class="tab-panel hidden">
+            <div class="table-tools">
+              <p class="muted section-blurb">
+                Data mapping connects your custom naming conventions to Bloomreach’s predefined formats.
+                This lets you keep your existing event names, customer properties, and catalog structure
+                while ensuring features like recommendations, predictions, and use cases work seamlessly.
+                <a href="https://documentation.bloomreach.com/engagement/docs/data-mapping" target="_blank" rel="noopener noreferrer">Learn more</a>
+              </p>
+              <input id="mappingFilter" type="search" placeholder="Filter mapping…" />
+              <span id="mappingCount" class="muted"></span>
+            </div>
+            <div id="mappingSections" class="mapping-sections"></div>
+          </div>
+
+          <div id="tab-catalogs" class="tab-panel hidden">
+            <div class="table-tools">
+              <p class="muted section-blurb">
+                Catalogs and where they are used (scenarios, recommendations, campaigns, mapping)
+                · <a id="catalogsUiLink" href="#" target="_blank" rel="noopener noreferrer">Open in Engagement</a>
+              </p>
+              <span id="catalogsCount" class="muted"></span>
+            </div>
+            <div class="table-wrap">
+              <table id="catalogsTable">
+                <thead>
+                  <tr>
+                    <th>Catalog</th>
+                    <th>Type</th>
+                    <th>Used</th>
+                    <th>Usages</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="tab-imports" class="tab-panel hidden">
+            <div class="table-tools">
+              <p class="muted section-blurb">
+                Imports are not available via Loomi Connect
+                · <a id="importsUiLink" href="#" target="_blank" rel="noopener noreferrer">Open Imports in Engagement</a>
+              </p>
+              <span id="importsCount" class="muted"></span>
+            </div>
+            <div class="table-wrap">
+              <table id="importsTable">
+                <thead>
+                  <tr>
+                    <th>Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="empty-row">
+                    <td>Regular customer/event Imports are not exposed by Loomi Connect yet — open Engagement to review them.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <div class="results-subsection results-section-card">
+          <div class="panel-head subsection-head">
+            <h3>Data findings</h3>
+            <p class="muted">Rule-based checks from schema, mapping, and consent — factual issues only</p>
+          </div>
+          <div id="findingsList" class="findings"></div>
+          <div class="ai-insights-block">
+            <div class="panel-head subsection-head ai-insights-head">
+              <h4>AI recommendations</h4>
+              <p class="muted">Glean-enriched narratives on the findings above (does not invent new schema issues)</p>
+            </div>
+            <div id="findingsAiList" class="ai-insights-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="primary-scenarios" class="primary-panel hidden">
+        <div id="overviewBlocks" class="overview-blocks">
+          <section class="overview-block">
+            <h3>Channels — utilised</h3>
+            <p class="muted overview-block-blurb">From live scenarios and campaign events (last 90 days)</p>
+            <div id="kpiChannels" class="kpi-grid kpi-grid-channels"></div>
+          </section>
+          <section class="overview-block">
+            <h3>Personalization &amp; AI</h3>
+            <div id="kpiAi" class="kpi-grid kpi-grid-ai"></div>
+          </section>
+        </div>
+
+        <div class="results-subsection results-section-card">
+          <div class="panel-head subsection-head">
+            <h3>Scenarios &amp; adoption opportunities</h3>
+            <p class="muted">Rule-based gaps from live scenarios, channels, and AI feature usage</p>
+          </div>
+          <div id="adoptionList" class="adoption-list"></div>
+          <div class="ai-insights-block">
+            <div class="panel-head subsection-head ai-insights-head">
+              <h4>AI adoption advice</h4>
+              <p class="muted">Glean-prioritized next steps grounded in the opportunities above and internal docs</p>
+            </div>
+            <div id="adoptionAiList" class="ai-insights-list"></div>
+          </div>
+
+          <div class="usecase-center">
+            <div class="panel-head usecase-center-head">
+              <h3>Use Case Center ideas</h3>
+              <p class="muted">
+                Ready-to-launch Bloomreach templates — open in docs, then download from Use Case Center in Engagement.
+                <a href="https://documentation.bloomreach.com/engagement/docs/about-use-case-center" target="_blank" rel="noopener noreferrer">About Use Case Center</a>
+              </p>
+            </div>
+            <div id="useCaseCenterList" class="usecase-grid"></div>
+          </div>
+
+          <div class="activation-block">
+            <div class="table-tools">
+              <h3 class="block-title">Live scenarios</h3>
+              <input id="scenariosFilter" type="search" placeholder="Filter scenarios…" />
+              <span id="scenariosCount" class="muted"></span>
+            </div>
+            <div class="table-wrap">
+              <table id="scenariosTable">
+                <thead>
+                  <tr>
+                    <th>Scenario</th>
+                    <th>Kind</th>
+                    <th>Status</th>
+                    <th>Last updated</th>
+                    <th>Events used</th>
+                    <th>Event usage</th>
+                    <th>Channels</th>
+                    <th>Nodes</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="activation-block">
+            <div class="table-tools">
+              <h3 class="block-title">Active weblayers</h3>
+              <span id="weblayersCount" class="muted"></span>
+            </div>
+            <p class="muted section-blurb">Live web layers / banners currently set to active</p>
+            <div class="table-wrap">
+              <table id="weblayersTable">
+                <thead>
+                  <tr>
+                    <th>Weblayer</th>
+                    <th>Status</th>
+                    <th>Last updated</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="activation-block">
+            <div class="table-tools">
+              <h3 class="block-title">Top performing automations</h3>
+              <span id="scenarioPerfCount" class="muted"></span>
+            </div>
+            <p class="muted section-blurb">Last 30 days — on-event automations only (date-triggered and BAU / FY campaigns excluded)</p>
+            <div class="table-wrap">
+              <table id="scenarioPerfTable">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Campaign / scenario</th>
+                    <th>Delivered</th>
+                    <th>Opens</th>
+                    <th>Clicks</th>
+                    <th>Open rate</th>
+                    <th>CTR</th>
+                    <th>Revenue</th>
+                    <th>Match</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="activation-block">
+            <div class="table-tools">
+              <h3 class="block-title">Personalization &amp; AI</h3>
+              <span id="personalizationCount" class="muted"></span>
+            </div>
+            <div id="personalizationSummary" class="mapping-section"></div>
+            <div class="table-tools">
+              <p class="muted section-blurb">Recommendations</p>
+              <input id="recommendationsFilter" type="search" placeholder="Filter recommendations…" />
+            </div>
+            <div class="table-wrap">
+              <table id="recommendationsTable">
+                <thead>
+                  <tr>
+                    <th>Recommendations</th>
+                    <th>Status</th>
+                    <th>Running</th>
+                    <th>Used in templates</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="table-tools" style="margin-top: 1rem">
+              <p class="muted section-blurb">Predictions</p>
+            </div>
+            <div class="table-wrap">
+              <table id="predictionsTable">
+                <thead>
+                  <tr>
+                    <th>Prediction</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="table-tools" style="margin-top: 1rem">
+              <p class="muted section-blurb">Autosegments</p>
+            </div>
+            <div class="table-wrap">
+              <table id="autosegmentsTable">
+                <thead>
+                  <tr>
+                    <th>Autosegment</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="table-tools" style="margin-top: 1rem">
+              <p class="muted section-blurb">Live scenarios referencing recommendations / content sources</p>
+            </div>
+            <div class="table-wrap">
+              <table id="personalizationScenariosTable">
+                <thead>
+                  <tr>
+                    <th>Scenario</th>
+                    <th>Signals</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="primary-other" class="primary-panel hidden">
+        <div class="results-subsection results-section-card">
+          <div class="panel-head subsection-head">
+            <h3>Other checks</h3>
+            <p class="muted">
+              Items from a standard data audit that are not available via Loomi Connect — verify in Engagement UI, the live site, or the Data Validation Dashboard.
+            </p>
+          </div>
+          <div id="otherChecksList" class="other-checks"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-brand">
+      <img class="product-icon small" src="/logo-engagement.svg" width="20" height="20" alt="" />
+      <span>Marketing Setup & Adoption Audit</span>
+    </div>
+    <p>Powered by Loomi Connect</p>
+  </footer>
+
+  <script src="/export-report.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
