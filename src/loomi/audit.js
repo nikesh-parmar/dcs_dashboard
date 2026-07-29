@@ -1103,6 +1103,7 @@ export function buildAudit({
   weblayers = null,
   scenarioPerformance = null,
   eventVolumes = null,
+  deliverability = null,
   clientBrief = null,
   catalogsAvailable = true,
   propertySamples = null,
@@ -1376,6 +1377,18 @@ export function buildAudit({
     scenarioPerformanceSummary: {
       windowDays: scenarioPerformance?.windowDays ?? 30,
       revenueAvailable: Boolean(scenarioPerformance?.revenueAvailable),
+    },
+    deliverability: deliverability || {
+      windowDays: 30,
+      emailSends30d: null,
+      emailDelivered30d: null,
+      hardBounces30d: null,
+      softBounces30d: null,
+      hardBounceRate: null,
+      deliveryRate: null,
+      topCampaigns: [],
+      ok: false,
+      note: "Deliverability metrics not loaded.",
     },
     channels: channelUsage,
     personalization,
@@ -1803,6 +1816,150 @@ async function loadCampaignActionTypeCounts(loomi, projectId, toolErrors) {
     });
     return new Map();
   }
+}
+
+/**
+ * Email deliverability signals for the last 30 days via campaign events.
+ * Sends ≈ enqueued/sent; hard bounces use hard_bounced (+ legacy bounced).
+ */
+async function loadDeliverabilityMetrics(loomi, projectId, toolErrors, { onProgress } = {}) {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  onProgress?.({
+    step: "deliverability",
+    detail: "Loading email send & bounce metrics (last 30 days)…",
+    percent: 62,
+  });
+
+  const empty = {
+    windowDays: 30,
+    emailSends30d: null,
+    emailDelivered30d: null,
+    hardBounces30d: null,
+    softBounces30d: null,
+    hardBounceRate: null,
+    deliveryRate: null,
+    topCampaigns: [],
+    ok: false,
+    note: null,
+  };
+
+  const emailFilter =
+    '(.action_type = "email" or .action_type = "transactional_email")';
+
+  let emailSends30d = null;
+  let emailDelivered30d = null;
+  let hardBounces30d = null;
+  let softBounces30d = null;
+
+  const countQuery = async (query, label) => {
+    try {
+      const result = await loomi.callTool("execute_analytics_eql", {
+        project_id: projectId,
+        query,
+      });
+      if (result?.success === false || result?.error) {
+        toolErrors.push({
+          tool: "execute_analytics_eql",
+          error: String(result.error || `${label} query failed`),
+        });
+        return null;
+      }
+      const value = Number(result?.data?.rows?.[0]?.values?.[0]);
+      return Number.isFinite(value) ? value : null;
+    } catch (err) {
+      toolErrors.push({
+        tool: "execute_analytics_eql",
+        error: err.message || String(err),
+      });
+      return null;
+    }
+  };
+
+  emailSends30d = await countQuery(
+    `select count(event campaign where ${emailFilter} and (.status = "enqueued" or .status = "sent")) in last 30 days`,
+    "email sends 30d"
+  );
+
+  await wait(1100);
+  emailDelivered30d = await countQuery(
+    `select count(event campaign where ${emailFilter} and .status = "delivered") in last 30 days`,
+    "email delivered 30d"
+  );
+
+  await wait(1100);
+  hardBounces30d = await countQuery(
+    `select count(event campaign where ${emailFilter} and (.status = "hard_bounced" or .status = "bounced")) in last 30 days`,
+    "email hard bounces 30d"
+  );
+
+  await wait(1100);
+  softBounces30d = await countQuery(
+    `select count(event campaign where ${emailFilter} and (.status = "soft_bounced" or .status = "dropped")) in last 30 days`,
+    "email soft bounces 30d"
+  );
+
+  onProgress?.({
+    step: "deliverability",
+    detail: "Loading latest campaign send counts…",
+    percent: 66,
+  });
+
+  await wait(1100);
+  let topCampaigns = [];
+  try {
+    const result = await loomi.callTool("execute_analytics_eql", {
+      project_id: projectId,
+      query: `select count(event campaign where ${emailFilter} and (.status = "enqueued" or .status = "sent")) by event campaign.campaign_name grouping top 8 in last 30 days`,
+    });
+    if (result?.success === false || result?.error) {
+      toolErrors.push({
+        tool: "execute_analytics_eql",
+        error: String(result.error || "campaign send counts query failed"),
+      });
+    } else {
+      for (const row of result?.data?.rows || []) {
+        const name = row?.headers?.[0]?.value;
+        if (!name || row?.headers?.[0]?.type === "other") continue;
+        const sends = Number(row?.values?.[0] ?? 0);
+        if (!Number.isFinite(sends) || sends <= 0) continue;
+        topCampaigns.push({ campaignName: String(name), sends });
+      }
+    }
+  } catch (err) {
+    toolErrors.push({
+      tool: "execute_analytics_eql",
+      error: err.message || String(err),
+    });
+  }
+
+  const hardBounceRate =
+    emailSends30d > 0 && hardBounces30d != null
+      ? hardBounces30d / emailSends30d
+      : null;
+  const deliveryRate =
+    emailSends30d > 0 && emailDelivered30d != null
+      ? emailDelivered30d / emailSends30d
+      : null;
+
+  const ok =
+    emailSends30d != null ||
+    hardBounces30d != null ||
+    topCampaigns.length > 0;
+
+  return {
+    windowDays: 30,
+    emailSends30d,
+    emailDelivered30d,
+    hardBounces30d,
+    softBounces30d,
+    hardBounceRate,
+    deliveryRate,
+    topCampaigns,
+    ok,
+    note: ok
+      ? null
+      : "Email send/bounce metrics were not available via Loomi for the last 30 days.",
+  };
 }
 
 function parseEventTypeCountRows(eqlResult) {
@@ -3178,6 +3335,11 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     toolErrors
   );
 
+  progress("deliverability", "Loading email deliverability metrics…", 62);
+  const deliverability = await loadDeliverabilityMetrics(loomi, projectId, toolErrors, {
+    onProgress,
+  });
+
   // Skipped: recommendation engines, predictions, and autosegments MCP loads.
   const recommendations = {
     engines: [],
@@ -3223,6 +3385,7 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     weblayers,
     scenarioPerformance,
     eventVolumes,
+    deliverability,
     clientBrief,
     propertySamples,
     toolErrors,
@@ -3274,6 +3437,7 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     adoption: [],
     extras: [],
     sources: [],
+    successPlans: [],
   };
 
   if (glean && gleanMeta.connected) {

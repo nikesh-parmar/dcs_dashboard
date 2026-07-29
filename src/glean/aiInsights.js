@@ -156,6 +156,7 @@ function emptyInsights(reason = null) {
     adoption: [],
     extras: [],
     sources: [],
+    successPlans: [],
   };
 }
 
@@ -177,6 +178,7 @@ function normalizeInsights(raw, { findings, adoption }) {
       adoption: [],
       extras: [],
       sources: [],
+      successPlans: [],
     };
   }
 
@@ -201,6 +203,9 @@ function normalizeInsights(raw, { findings, adoption }) {
 
   const extras = asExtraList(json.extras || json.additionalSuggestions || []).slice(0, 5);
   const sources = asSourceList(json.sources || []).slice(0, 6);
+  const successPlans = asSuccessPlanList(
+    json.successPlans || json.successPlanning || json.actionPlans || []
+  );
 
   return {
     available: true,
@@ -211,7 +216,111 @@ function normalizeInsights(raw, { findings, adoption }) {
     adoption: adoptionNarratives.slice(0, 10),
     extras,
     sources,
+    successPlans,
   };
+}
+
+function asSuccessPlanList(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const title = String(item.title || item.basedOn || item.opportunity || "").trim();
+      if (!title) return null;
+      const stepsRaw =
+        item.actionSteps || item.steps || item.recommendedActions || item.actions || [];
+      const actionSteps = (Array.isArray(stepsRaw) ? stepsRaw : [stepsRaw])
+        .map((s) => String(s || "").trim())
+        .filter(Boolean)
+        .slice(0, 8);
+      return {
+        basedOn: String(item.basedOn || item.opportunity || title).trim().slice(0, 200),
+        title: title.slice(0, 180),
+        currentBenchmark: String(
+          item.currentBenchmark || item.benchmark || item.situation || item.currentState || ""
+        )
+          .trim()
+          .slice(0, 420),
+        expectedLift: String(
+          item.expectedLift || item.expectedValue || item.lift || item.value || ""
+        )
+          .trim()
+          .slice(0, 320),
+        bloomreachSolution: String(
+          item.bloomreachSolution ||
+            item.proposedSolution ||
+            item.solution ||
+            item.bloomreachCapability ||
+            ""
+        )
+          .trim()
+          .slice(0, 420),
+        desiredOutcome: String(
+          item.desiredOutcome || item.outcome || item.measurement || item.kpi || ""
+        )
+          .trim()
+          .slice(0, 420),
+        effort: String(item.effort || "medium").trim().toLowerCase().slice(0, 40) || "medium",
+        actionSteps,
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 6);
+}
+
+function fallbackSuccessPlans(adoption = [], adoptionNarratives = []) {
+  const plans = [];
+  const seen = new Set();
+
+  for (const item of adoptionNarratives) {
+    const title = String(item.title || item.basedOn || "").trim();
+    const key = title.toLowerCase();
+    if (!title || seen.has(key)) continue;
+    seen.add(key);
+    plans.push({
+      basedOn: item.basedOn || title,
+      title,
+      currentBenchmark: item.narrative || "Gap identified in the project audit.",
+      expectedLift: "Improve journey coverage and conversion for this use case.",
+      bloomreachSolution:
+        item.action || "Adopt the matching Use Case Center scenario in Engagement.",
+      desiredOutcome: "Live scenario with measurable opens/clicks/conversions vs baseline.",
+      effort: "medium",
+      actionSteps: [
+        item.action || "Review the related Use Case Center scenario.",
+        "Confirm required events and consent categories are mapped.",
+        "Pilot with a limited audience, then measure lift before scaling.",
+      ].filter(Boolean),
+    });
+    if (plans.length >= 5) return plans;
+  }
+
+  for (const item of adoption) {
+    const title = String(item.title || "").trim();
+    const key = title.toLowerCase();
+    if (!title || seen.has(key)) continue;
+    if (/weblayer|web layer|banner/.test(`${item.area || ""} ${title}`.toLowerCase())) continue;
+    seen.add(key);
+    plans.push({
+      basedOn: title,
+      title,
+      currentBenchmark: String(item.detail || "Opportunity flagged by the audit.").slice(0, 420),
+      expectedLift: `Impact: ${item.impact || "medium"} — prioritize for success planning.`,
+      bloomreachSolution: String(
+        item.action || "Implement via Bloomreach Engagement scenarios / Use Case Center."
+      ).slice(0, 420),
+      desiredOutcome: "Adopted use case with defined KPI and review cadence.",
+      effort: String(item.effort || "medium").toLowerCase(),
+      actionSteps: [
+        String(item.action || "Define scope and owner for this opportunity.").slice(0, 280),
+        "Map prerequisites (events, consent, catalog) before build.",
+        "Ship a pilot, instrument success metrics, then expand.",
+      ],
+    });
+    if (plans.length >= 5) break;
+  }
+
+  return plans;
 }
 
 function asNarrativeList(items) {
@@ -302,6 +411,7 @@ export async function enrichFindingsWithGlean(glean, input = {}) {
       available: true,
       source: "glean",
       summary: "No rule-based findings or adoption gaps to enrich.",
+      successPlans: [],
     };
   }
 
@@ -355,6 +465,22 @@ export async function enrichFindingsWithGlean(glean, input = {}) {
               action: "concrete adopt step",
             },
           ],
+          successPlans: [
+            {
+              basedOn: "exact title from adoptionOpportunities[] (best-action opportunity)",
+              title: "success-plan headline",
+              currentBenchmark: "current situation or benchmark for this client",
+              expectedLift: "expected lift or business value if addressed",
+              bloomreachSolution: "proposed Bloomreach Engagement / Use Case Center solution",
+              desiredOutcome: "desired outcome and how to measure success",
+              effort: "low|medium|high",
+              actionSteps: [
+                "recommended action 1",
+                "recommended action 2",
+                "recommended action 3",
+              ],
+            },
+          ],
           extras: [
             {
               area: "optional area",
@@ -370,6 +496,8 @@ export async function enrichFindingsWithGlean(glean, input = {}) {
         "- Prefer rewriting / prioritizing items from findings[] and adoptionOpportunities[].",
         "- When verticalAssessment is present, bias adoption advice toward its topGaps for that vertical.",
         "- basedOn must match an input title when referencing those lists.",
+        "- successPlans: produce one plan for each of the top 3–5 highest-value adoptionOpportunities (best actions).",
+        "- Each successPlan must include currentBenchmark, expectedLift, bloomreachSolution, desiredOutcome, effort, and 3–5 concrete actionSteps.",
         "- extras only when clearly supported by contextDocs or the audit JSON; max 3.",
         "- Be specific to the client vertical/summary when available.",
         "Audit JSON:",
@@ -378,6 +506,9 @@ export async function enrichFindingsWithGlean(glean, input = {}) {
     });
 
     const insights = normalizeInsights(raw, { findings, adoption });
+    if (!insights.successPlans.length) {
+      insights.successPlans = fallbackSuccessPlans(adoption, insights.adoption);
+    }
     if (!insights.sources.length && contextDocs.length) {
       insights.sources = contextDocs.slice(0, 4).map((d) => ({
         title: d.title,
