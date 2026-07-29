@@ -672,6 +672,22 @@ function renderAudit(data) {
   showResults();
 }
 
+function renderEnablementAcademy(academy) {
+  const root = document.querySelector("#sub-onboarding-enablement .enablement-links");
+  if (!root || !academy) return;
+  root.querySelectorAll("[data-academy-suggested]").forEach((el) => el.remove());
+  const suggested = Array.isArray(academy.suggested) ? academy.suggested.slice(0, 3) : [];
+  for (const course of suggested) {
+    const li = document.createElement("li");
+    li.dataset.academySuggested = "1";
+    li.innerHTML = `<a href="${escapeHtml(course.url || "https://academy.bloomreach.com/")}" target="_blank" rel="noopener noreferrer">${escapeHtml(course.title)}</a>
+      <span class="muted support-link-note">${escapeHtml(
+        course.relatedTo ? `Academy · for ${course.relatedTo}` : "Academy · recommended for your opportunities"
+      )}</span>`;
+    root.appendChild(li);
+  }
+}
+
 function filterGapAnalysisItems(items = []) {
   return items.filter((item) => {
     const hay = `${item.area || ""} ${item.title || ""} ${item.detail || ""} ${item.action || ""}`.toLowerCase();
