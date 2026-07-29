@@ -863,11 +863,6 @@ function renderAdoptionOpportunities(items) {
           ${item.scenario ? `<p class="adoption-scenario">Scenario: <strong>${escapeHtml(item.scenario)}</strong></p>` : ""}
           ${item.detail ? `<p>${escapeHtml(item.detail)}</p>` : ""}
           ${item.action ? `<p><strong>Adopt:</strong> ${escapeHtml(item.action)}</p>` : ""}
-          ${
-            Array.isArray(item.weblayers) && item.weblayers.length
-              ? `<p class="adoption-weblayers"><strong>Weblayers:</strong> ${escapeHtml(item.weblayers.join(", "))}</p>`
-              : ""
-          }
         </div>
       </article>`;
     })
