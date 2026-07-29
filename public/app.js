@@ -9,7 +9,6 @@ const els = {
   resultsSection: document.getElementById("resultsSection"),
   findingsSection: document.getElementById("findingsList"),
   adoptionSection: document.getElementById("adoptionList"),
-  tablesSection: document.getElementById("primary-data"),
   projectMeta: document.getElementById("projectMeta"),
   findingsList: document.getElementById("findingsList"),
   adoptionList: document.getElementById("adoptionList"),
@@ -17,27 +16,12 @@ const els = {
   adoptionAiList: document.getElementById("adoptionAiList"),
   verticalAssessment: document.getElementById("verticalAssessment"),
   useCaseCenterList: document.getElementById("useCaseCenterList"),
-  kpiData: document.getElementById("kpiData"),
-  kpiChannels: document.getElementById("kpiChannels"),
-  kpiAi: document.getElementById("kpiAi"),
+  dataQualitySummary: document.getElementById("dataQualitySummary"),
+  dataQualityList: document.getElementById("dataQualityList"),
+  successPlanningBody: document.getElementById("successPlanningBody"),
+  serviceRecEmpty: document.getElementById("serviceRecEmpty"),
   eventsFilter: document.getElementById("eventsFilter"),
-  attributesFilter: document.getElementById("attributesFilter"),
-  mappingFilter: document.getElementById("mappingFilter"),
   eventsCount: document.getElementById("eventsCount"),
-  attributesCount: document.getElementById("attributesCount"),
-  identifiersCount: document.getElementById("identifiersCount"),
-  consentsCount: document.getElementById("consentsCount"),
-  mappingCount: document.getElementById("mappingCount"),
-  catalogsCount: document.getElementById("catalogsCount"),
-  importsCount: document.getElementById("importsCount"),
-  scenariosCount: document.getElementById("scenariosCount"),
-  personalizationCount: document.getElementById("personalizationCount"),
-  weblayersCount: document.getElementById("weblayersCount"),
-  scenarioPerfCount: document.getElementById("scenarioPerfCount"),
-  mappingSections: document.getElementById("mappingSections"),
-  personalizationSummary: document.getElementById("personalizationSummary"),
-  scenariosFilter: document.getElementById("scenariosFilter"),
-  recommendationsFilter: document.getElementById("recommendationsFilter"),
   exportHtmlBtn: document.getElementById("exportHtmlBtn"),
   clientBriefCard: document.getElementById("clientBriefCard"),
   clientBriefTitle: document.getElementById("clientBriefTitle"),
@@ -186,26 +170,18 @@ async function connect() {
 }
 
 function hideResults() {
-  if (els.resultsSection) els.resultsSection.classList.add("hidden");
   if (els.exportHtmlBtn) els.exportHtmlBtn.disabled = true;
+  if (els.projectMeta) {
+    els.projectMeta.textContent =
+      "Connect and run an audit to populate pillar insights for a project.";
+  }
+  if (els.clientBriefCard) els.clientBriefCard.classList.add("hidden");
 }
 
 function showResults() {
   if (!els.resultsSection) return;
   els.resultsSection.classList.remove("hidden");
   if (els.exportHtmlBtn) els.exportHtmlBtn.disabled = false;
-  selectPrimaryTab("data");
-}
-
-function selectPrimaryTab(name) {
-  document.querySelectorAll(".primary-tabs .tab").forEach((tab) => {
-    const active = tab.dataset.primaryTab === name;
-    tab.classList.toggle("active", active);
-    tab.setAttribute("aria-selected", active ? "true" : "false");
-  });
-  document.querySelectorAll(".primary-panel").forEach((panel) => {
-    panel.classList.toggle("hidden", panel.id !== `primary-${name}`);
-  });
 }
 
 async function disconnect() {
@@ -756,100 +732,34 @@ async function refreshClientBrief() {
 }
 
 function renderAudit(data) {
-  const o = data.overview;
   renderClientBrief(data);
-  els.projectMeta.innerHTML = [
-    data.project.workspace,
-    data.project.category,
-    data.project.url
-      ? `<a href="${escapeHtml(data.project.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(data.project.url)}</a>`
-      : "",
-  ]
-    .filter(Boolean)
-    .join(" · ");
-
-  const catalogsUiLink = document.getElementById("catalogsUiLink");
-  if (catalogsUiLink) {
-    if (data.project.catalogsUrl) {
-      catalogsUiLink.href = data.project.catalogsUrl;
-      catalogsUiLink.classList.remove("hidden");
-    } else {
-      catalogsUiLink.classList.add("hidden");
-    }
+  if (els.projectMeta) {
+    els.projectMeta.innerHTML = [
+      data.project.name,
+      data.project.workspace,
+      data.project.category,
+      data.project.url
+        ? `<a href="${escapeHtml(data.project.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(data.project.url)}</a>`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
   }
-  const importsUiLink = document.getElementById("importsUiLink");
-  if (importsUiLink) {
-    if (data.project.importsUrl) {
-      importsUiLink.href = data.project.importsUrl;
-      importsUiLink.classList.remove("hidden");
-    } else {
-      importsUiLink.classList.add("hidden");
-    }
-  }
-
-  const channelsUsed = Array.isArray(o.channelsUsed) ? o.channelsUsed : [];
-  const channelsAvailableUnused = Array.isArray(o.channelsAvailableUnused)
-    ? o.channelsAvailableUnused
-    : [];
-  const channelsUnavailable = Array.isArray(o.channelsUnavailable)
-    ? o.channelsUnavailable
-    : [];
-  const ai = o.aiPersonalization || {};
-
-  renderKpiSection(els.kpiData, [
-    ["Customers", o.totalCustomers],
-    [
-      "Events - All Time/30d",
-      `${formatNumber(o.totalEvents)} / ${formatNumber(o.events30d)}`,
-    ],
-    ["IDs", `${o.hardIdCount ?? 0} hard / ${o.softIdCount ?? 0} soft`],
-    ["Consent", o.consentCategoryCount],
-    ["Properties", `${o.attributeCount}${o.maxCustomerProperties ? ` / ${o.maxCustomerProperties}` : ""}`],
-  ]);
-
-  renderKpiSection(els.kpiChannels, [
-    ["Email", channelPill(o.channels, "Email")],
-    ["SMS", channelPill(o.channels, "SMS")],
-    ["WhatsApp", channelPill(o.channels, "WhatsApp")],
-    ["Push", channelPill(o.channels, "Push")],
-    ["Weblayer", channelPill(o.channels, "Weblayer")],
-    ["In App", channelPill(o.channels, "In App")],
-  ], { compact: true });
-
-  renderKpiSection(els.kpiAi, [
-    ["Recommendations", aiFeatureValue(ai.recommendations)],
-    ["Contextual personalization", aiFeatureValue(ai.contextualPersonalization)],
-    ["Predictions", aiFeatureValue(ai.predictions)],
-    ["Autosegments", aiFeatureValue(ai.autosegments)],
-    ["Recommendations+", aiFeatureValue(ai.recommendationsPlus)],
-  ], { compact: true });
-
-  void channelsUsed;
-  void channelsAvailableUnused;
-  void channelsUnavailable;
 
   renderFindings(data.findings || []);
   renderAdoptionOpportunities(data.adoptionOpportunities || []);
   renderAiInsights(data.aiInsights || null);
   renderVerticalAssessment(data.verticalAssessment || null);
   renderUseCaseCenter(data.adoptionOpportunities || [], data.scenarios || [], data.verticalAssessment || null);
-  renderWeblayersTable(data.weblayers || [], data.weblayerSummary || {});
-  renderScenarioPerformance(
-    data.scenarioPerformance || [],
-    data.scenarioPerformanceSummary || {}
-  );
-  renderIdentifiersTable(data.identifiers || []);
-  renderConsentsTable(data.consents || []);
-  renderAttributesTable(data.attributes || []);
   renderDataQuality(data.dataQuality || {});
-  renderDataExpiry(data.dataExpiry || {});
+  renderSuccessPlanning(data);
   renderOtherChecks();
   renderEventsTable(data.events || []);
-  renderScenariosTable(data.scenarios || [], data.scenarioSummary || {});
-  renderPersonalization(data.personalization || {});
-  renderMappingSections(data.mappingSections || {}, data.mapping || []);
-  renderCatalogsTable(data.catalogs || []);
-  if (els.importsCount) els.importsCount.textContent = "N/A";
+
+  if (els.serviceRecEmpty && els.useCaseCenterList) {
+    const hasCards = els.useCaseCenterList.children.length > 0;
+    els.serviceRecEmpty.classList.toggle("hidden", hasCards);
+  }
 
   if (Array.isArray(data.toolErrors) && data.toolErrors.length) {
     setStatus(
@@ -861,7 +771,34 @@ function renderAudit(data) {
   showResults();
 }
 
+function renderSuccessPlanning(data) {
+  const root = els.successPlanningBody;
+  if (!root) return;
+  const brief = data.clientBrief || {};
+  const vertical = data.verticalAssessment || {};
+  const overview = brief.overview || data.overview || {};
+  const parts = [];
+
+  if (brief.overview || brief.summary) {
+    parts.push(`<p>${escapeHtml(brief.overview || brief.summary)}</p>`);
+  }
+  if (vertical.summary || vertical.headline) {
+    parts.push(`<p><strong>Vertical focus:</strong> ${escapeHtml(vertical.summary || vertical.headline)}</p>`);
+  }
+  if (overview.totalCustomers != null || overview.events30d != null) {
+    parts.push(
+      `<p class="muted">${formatNumber(overview.totalCustomers)} customers · ${formatNumber(overview.events30d)} events / 30d</p>`
+    );
+  }
+  if (!parts.length) {
+    root.innerHTML = `<p class="muted">No success-planning context yet. Connect Glean and re-run the audit for a client brief.</p>`;
+    return;
+  }
+  root.innerHTML = parts.join("");
+}
+
 function renderFindings(findings) {
+  if (!els.findingsList) return;
   if (!findings.length) {
     els.findingsList.innerHTML = `<div class="finding"><span class="finding-sev low">ok</span><div><h3>No automatic issues flagged</h3><p>Schema, mapping, and consent look within expected baselines.</p></div></div>`;
     return;
@@ -1386,103 +1323,39 @@ function updateEventsSortIndicators() {
 }
 
 function renderEventsTable(rows) {
-  const filter = els.eventsFilter.value.trim().toLowerCase();
-  const classFilters = getSelectedEventClasses();
+  if (!els.eventsCount) return;
+  const filter = (els.eventsFilter?.value || "").trim().toLowerCase();
   let filtered = rows.filter((row) => {
-    const classification = String(row.classification || "").toLowerCase();
-    if (classFilters.length && !classFilters.includes(classification)) return false;
     if (!filter) return true;
-    const props = row.properties || [];
-    const propText = props.map((p) => `${p.property} ${p.type} ${p.source}`).join(" ");
-    return `${row.type} ${row.classification} ${row.source} ${row.status} ${propText}`
+    return `${row.type} ${row.classification} ${row.source} ${row.status}`
       .toLowerCase()
       .includes(filter);
   });
 
   filtered = [...filtered].sort((a, b) =>
-    eventsSort.key === "firstSeen"
-      ? compareNullableDate(a.firstSeen, b.firstSeen, eventsSort.dir)
-      : compareNullableNumber(a[eventsSort.key], b[eventsSort.key], eventsSort.dir)
+    compareNullableNumber(a.eventCount30, b.eventCount30, "desc")
   );
 
   els.eventsCount.textContent = `${filtered.length} / ${rows.length}`;
-  updateEventsSortIndicators();
   const tbody = document.querySelector("#eventsTable tbody");
+  if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = emptyTable(9, "No events match filter");
+    tbody.innerHTML = emptyTable(4, "No events match filter");
     return;
   }
 
   tbody.innerHTML = filtered
-    .map((row, index) => {
-      const props = row.properties || [];
-      const rowId = `event-${index}`;
-      const canExpand = props.length > 0;
-      const propMatch =
-        Boolean(filter) &&
-        props.some((p) =>
-          `${p.property} ${p.type} ${p.source}`.toLowerCase().includes(filter)
-        );
-      const startOpen = propMatch;
-      const propRows = props.length
-        ? props
-            .map(
-              (p) => `
-            <tr>
-              <td><code>${escapeHtml(p.property)}</code></td>
-              <td>${escapeHtml(p.type || "")}</td>
-              <td>${escapeHtml(p.source || "")}</td>
-              <td>${pill(p.used)}</td>
-              <td>${pill(p.private)}</td>
-            </tr>`
-            )
-            .join("")
-        : `<tr class="empty-row"><td colspan="5">No attributes on this event</td></tr>`;
-
-      return `
-      <tr class="expandable-row" data-expand="${rowId}">
-        <td>
-          ${
-            canExpand
-              ? `<button type="button" class="expand-btn${startOpen ? " is-open" : ""}" aria-expanded="${startOpen ? "true" : "false"}" aria-controls="${rowId}-detail" data-expand-toggle="${rowId}">
-                   <span class="expand-chevron" aria-hidden="true"></span>
-                   <code>${escapeHtml(row.type)}</code>
-                 </button>`
-              : `<code>${escapeHtml(row.type)}</code>`
-          }
-        </td>
-        <td>${escapeHtml(row.classification)}</td>
-        <td>${escapeHtml(row.source || "")}</td>
-        <td>${escapeHtml(row.status)}</td>
-        <td>${pill(row.used)}</td>
-        <td>${formatNumber(row.propertyCount)}</td>
+    .slice(0, 40)
+    .map(
+      (row) => `
+      <tr>
+        <td><code>${escapeHtml(row.type)}</code></td>
+        <td>${escapeHtml(row.classification || "")}</td>
         <td>${formatNumber(row.eventCount30)}</td>
         <td>${formatNumber(row.eventCount)}</td>
-        <td>${escapeHtml(formatLastUpdated(row.firstSeen))}</td>
-      </tr>
-      <tr id="${rowId}-detail" class="detail-row${startOpen ? "" : " hidden"}" data-expand-panel="${rowId}">
-        <td colspan="9">
-          <div class="nested-panel">
-            <p class="nested-title">Attributes for <code>${escapeHtml(row.type)}</code></p>
-            <table class="nested-table">
-              <thead>
-                <tr>
-                  <th>Attribute</th>
-                  <th>Type</th>
-                  <th>Source</th>
-                  <th>Used</th>
-                  <th>Private</th>
-                </tr>
-              </thead>
-              <tbody>${propRows}</tbody>
-            </table>
-          </div>
-        </td>
-      </tr>`;
-    })
+      </tr>`
+    )
     .join("");
-
-  bindExpandToggles(tbody);
 }
 
 function bindExpandToggles(root) {
@@ -1528,36 +1401,33 @@ function renderAttributesTable(rows) {
 function renderDataQuality(dataQuality) {
   const dq = dataQuality || { issues: [], note: null, sampleSize: 0 };
   const issues = dq.issues || [];
-  const blurb = document.getElementById("dataQualityBlurb");
-  const countEl = document.getElementById("dataQualityCount");
-  if (blurb) {
-    blurb.textContent =
+  if (els.dataQualitySummary) {
+    els.dataQualitySummary.textContent =
       dq.note ||
-      "Schema name heuristics plus sample customer property values.";
+      (issues.length
+        ? `${issues.length} QA issue(s) from schema heuristics and sample values.`
+        : "No QA issues flagged from schema + sample.");
   }
-  if (countEl) countEl.textContent = `${issues.length} issue(s)`;
-  const tbody = document.querySelector("#dataQualityTable tbody");
-  if (!tbody) return;
-  tbody.innerHTML = issues.length
-    ? issues
-        .map((row) => {
-          const observed =
-            row.observed ||
-            row.suggestedType ||
-            "—";
-          return `
-      <tr>
-        <td><span class="finding-sev ${escapeHtml(row.severity || "low")}">${escapeHtml(row.severity || "low")}</span></td>
-        <td>${escapeHtml((row.kind || "").replaceAll("_", " "))}</td>
-        <td>${escapeHtml(row.scope || "—")}</td>
-        <td><code>${escapeHtml(row.property || "")}</code></td>
-        <td>${escapeHtml(row.declaredType || "—")}</td>
-        <td>${escapeHtml(observed)}</td>
-        <td>${escapeHtml(row.detail || "—")}</td>
-      </tr>`;
-        })
-        .join("")
-    : emptyTable(7, "No data quality issues flagged from schema + sample");
+  const root = els.dataQualityList;
+  if (!root) return;
+  if (!issues.length) {
+    root.innerHTML = `<div class="finding"><span class="finding-sev low">ok</span><div><h3>No QA issues flagged</h3><p>Schema and sample checks look clean.</p></div></div>`;
+    return;
+  }
+  root.innerHTML = issues
+    .slice(0, 12)
+    .map(
+      (row) => `
+      <article class="finding">
+        <span class="finding-sev ${escapeHtml(row.severity || "low")}">${escapeHtml(row.severity || "low")}</span>
+        <div>
+          <div class="area-tag">${escapeHtml((row.kind || "qa").replaceAll("_", " "))}</div>
+          <h3><code>${escapeHtml(row.property || row.scope || "Issue")}</code></h3>
+          <p>${escapeHtml(row.detail || row.observed || row.suggestedType || "—")}</p>
+        </div>
+      </article>`
+    )
+    .join("");
 }
 
 function renderDataExpiry(dataExpiry) {
@@ -2245,37 +2115,8 @@ els.exportHtmlBtn?.addEventListener("click", () => {
   }
 });
 
-els.eventsFilter.addEventListener("input", () => {
+els.eventsFilter?.addEventListener("input", () => {
   if (auditData) renderEventsTable(auditData.events || []);
-});
-["eventsClassSystem", "eventsClassCommerce", "eventsClassCustom"].forEach((id) => {
-  document.getElementById(id)?.addEventListener("change", () => {
-    if (auditData) renderEventsTable(auditData.events || []);
-  });
-});
-document.querySelectorAll("[data-events-sort]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const key = btn.dataset.eventsSort;
-    if (!key) return;
-    if (eventsSort.key === key) {
-      eventsSort.dir = eventsSort.dir === "desc" ? "asc" : "desc";
-    } else {
-      eventsSort = { key, dir: "desc" };
-    }
-    if (auditData) renderEventsTable(auditData.events || []);
-  });
-});
-els.attributesFilter.addEventListener("input", () => {
-  if (auditData) renderAttributesTable(auditData.attributes || []);
-});
-els.mappingFilter.addEventListener("input", () => {
-  if (auditData) renderMappingSections(auditData.mappingSections || {}, auditData.mapping || []);
-});
-els.scenariosFilter?.addEventListener("input", () => {
-  if (auditData) renderScenariosTable(auditData.scenarios || [], auditData.scenarioSummary || {});
-});
-els.recommendationsFilter?.addEventListener("input", () => {
-  if (auditData) renderRecommendationsTable(auditData.personalization?.engines || []);
 });
 
 refreshStatus().catch((err) => setStatus(err.message, true));

@@ -78,11 +78,11 @@ function buildAuditHtmlReport(data) {
   const project = data.project || {};
   const o = data.overview || {};
   const generatedAt = new Date().toLocaleString();
-  const title = `Marketing Setup & Adoption Audit — ${project.name || project.id || "Project"}`;
+  const title = `Digital Client Services Agent — ${project.name || project.id || "Project"}`;
 
   const findings = data.findings || [];
   const adoption = data.adoptionOpportunities || [];
-  const ai = data.aiInsights || null;
+  const aiInsights = data.aiInsights || null;
   const events = (data.events || []).slice(0, 80);
   const scenarios = data.scenarios || [];
   const weblayers = data.weblayers || [];
@@ -244,12 +244,12 @@ function buildAuditHtmlReport(data) {
         : `<p>No automatic issues flagged.</p>`
     }
     ${
-      ai?.available
+      aiInsights?.available
         ? `<h3>AI recommendations (Glean)</h3>
-           ${ai.summary ? `<p>${reportEscape(ai.summary)}</p>` : ""}
+           ${aiInsights.summary ? `<p>${reportEscape(aiInsights.summary)}</p>` : ""}
            ${
-             (ai.findings || []).length
-               ? `<ul>${(ai.findings || [])
+             (aiInsights.findings || []).length
+               ? `<ul>${(aiInsights.findings || [])
                    .map(
                      (item) => `<li>
                  <strong>${reportEscape(item.title || item.basedOn || "Recommendation")}</strong>
@@ -260,8 +260,8 @@ function buildAuditHtmlReport(data) {
                    .join("")}</ul>`
                : ""
            }`
-        : ai?.error
-          ? `<p><em>AI recommendations unavailable: ${reportEscape(ai.error)}</em></p>`
+        : aiInsights?.error
+          ? `<p><em>AI recommendations unavailable: ${reportEscape(aiInsights.error)}</em></p>`
           : ""
     }
   `);
@@ -283,9 +283,9 @@ function buildAuditHtmlReport(data) {
         : `<p>No major adoption gaps flagged.</p>`
     }
     ${
-      ai?.available && (ai.adoption || []).length
+      aiInsights?.available && (aiInsights.adoption || []).length
         ? `<h3>AI adoption advice (Glean)</h3>
-           <ul>${(ai.adoption || [])
+           <ul>${(aiInsights.adoption || [])
              .map(
                (item) => `<li>
              <strong>${reportEscape(item.title || item.basedOn || "Adoption advice")}</strong>
