@@ -3303,6 +3303,57 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     }
   }
 
+  let academyCourses = {
+    available: false,
+    error: glean ? null : "Glean not connected",
+    foundations: [],
+    suggested: [],
+    sources: [],
+  };
+
+  if (glean && gleanMeta.connected) {
+    progress("academy", "Finding related Academy courses…", 99);
+    try {
+      const { fetchAcademyCourses } = await import("../glean/academyCourses.js");
+      const opportunitySeed = [
+        ...(aiInsights.adoption || []).map((a) => ({
+          title: a.title,
+          area: a.basedOn,
+          detail: a.narrative,
+          action: a.action,
+        })),
+        ...(audit.adoptionOpportunities || []),
+      ];
+      academyCourses = await fetchAcademyCourses(glean, {
+        project,
+        vertical:
+          verticalAssessment?.vertical?.label ||
+          clientBrief?.vertical ||
+          "",
+        opportunities: opportunitySeed,
+      });
+      if (academyCourses.needsAuth) {
+        gleanMeta.needsAuth = true;
+        gleanMeta.authUrl = academyCourses.authUrl || gleanMeta.authUrl;
+      }
+    } catch (err) {
+      toolErrors.push({
+        tool: "glean.academyCourses",
+        error: err.message || String(err),
+      });
+      academyCourses = {
+        ...academyCourses,
+        error: err.message || String(err),
+      };
+    }
+  }
+
   progress("done", "Audit complete", 100);
-  return { ...audit, verticalAssessment, aiInsights, glean: gleanMeta };
+  return {
+    ...audit,
+    verticalAssessment,
+    aiInsights,
+    academyCourses,
+    glean: gleanMeta,
+  };
 }

@@ -29,21 +29,21 @@
   </header>
 
   <main class="shell">
-    <section class="agent-hero" aria-labelledby="agentHeroTitle">
-      <div class="agent-hero-inner">
-        <div class="agent-hero-copy">
-          <h1 id="agentHeroTitle">Your Digital Client Services Agent</h1>
-          <p class="agent-hero-subtitle">Four Pillars of Support</p>
-        </div>
-        <div class="agent-hero-brand" aria-hidden="true">
-          <span class="bloomreach-wordmark">bloomreach</span>
+    <section class="hub-welcome" aria-labelledby="hubWelcomeTitle">
+      <div class="hub-welcome-main">
+        <div class="hub-avatar" id="hubAvatar" aria-hidden="true">BR</div>
+        <div class="hub-welcome-copy">
+          <h1 id="hubWelcomeTitle">Welcome</h1>
+          <p class="hub-welcome-sub">
+            Your Digital Client Services hub — self-serve toolkit &amp; recommendations for this project.
+          </p>
         </div>
       </div>
+      <div class="hub-welcome-brand">
+        <span class="bloomreach-wordmark">bloomreach</span>
+        <span class="hub-agent-pill">Digital Client Services Agent</span>
+      </div>
     </section>
-
-    <p class="pillars-intro">
-      A client-facing agent that supports the full customer journey across four capability pillars.
-    </p>
 
     <section class="controls" aria-label="Project selection">
       <label>
@@ -74,19 +74,86 @@
       <p id="auditProgressDetail" class="muted audit-progress-detail">Starting…</p>
     </div>
 
+    <section id="hubHome" class="hub-home hidden" aria-label="Project hub">
+      <div class="hub-grid">
+        <div class="hub-col hub-col-main">
+          <article class="hub-card hub-card-invite">
+            <span class="hub-invite-badge">Enablement spotlight</span>
+            <div class="hub-invite-row">
+              <div>
+                <h2>Bloomreach Academy &amp; Use Case Center</h2>
+                <ul class="hub-invite-meta">
+                  <li>Self-serve courses matched to your gaps</li>
+                  <li>Playbooks for Engagement scenarios</li>
+                  <li>Quarterzip + Support when you need a human</li>
+                </ul>
+              </div>
+              <a class="btn btn-dark" href="https://academy.bloomreach.com/" target="_blank" rel="noopener noreferrer">
+                Explore Academy →
+              </a>
+            </div>
+          </article>
+
+          <article class="hub-card hub-card-nba">
+            <header class="hub-card-label">
+              <span aria-hidden="true">⚡</span> Top next best action · Engagement
+            </header>
+            <div id="hubNbaBody" class="hub-nba-body">
+              <p class="muted">Load the project dashboard to surface the top opportunity.</p>
+            </div>
+          </article>
+
+          <article class="hub-card hub-card-health">
+            <header class="hub-card-label">
+              <span aria-hidden="true">🔍</span> Data audit &amp; health
+            </header>
+            <div id="hubHealthBody" class="hub-health-body">
+              <p class="muted">Health signals appear after the dashboard loads.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="hub-col hub-col-side">
+          <article class="hub-card hub-card-academy">
+            <header class="hub-card-label">
+              <span aria-hidden="true">🎓</span> Bloomreach Academy
+            </header>
+            <div id="hubAcademyBody" class="hub-academy-body">
+              <p class="muted">Academy courses related to your recommendations load with the dashboard.</p>
+            </div>
+          </article>
+
+          <article class="hub-card hub-card-support">
+            <h2>Need a hand?</h2>
+            <p>Get further support — docs, escalation or a human CSM.</p>
+            <div class="hub-support-actions">
+              <button type="button" class="btn btn-primary" data-hub-nav="success">Get further support</button>
+              <a class="hub-support-link" href="https://support.bloomreach.com/hc/en-us/articles/18550445647517-How-To-Contact-Support" target="_blank" rel="noopener noreferrer">
+                Bloomreach Support
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="hub-home-footer">
+        <button type="button" id="explorePillarsBtn" class="btn btn-ghost">Explore all four pillars</button>
+      </div>
+    </section>
+
     <section id="resultsSection" class="pillars-results hidden">
+      <div class="pillars-results-toolbar">
+        <div>
+          <button type="button" id="backToHubBtn" class="btn btn-ghost">← Back to hub</button>
+          <p class="muted" id="projectMeta"></p>
+        </div>
+      </div>
       <nav id="pillarTabs" class="pillar-tabs" role="tablist" aria-label="Four pillars of support">
         <button type="button" class="pillar-tab active" role="tab" aria-selected="true" data-pillar="onboarding">Onboarding &amp; Adoption</button>
         <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="performance">Performance &amp; Analysis</button>
         <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="recommendations">Recommendations &amp; Optimization</button>
         <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="success">Success &amp; Support</button>
       </nav>
-
-      <div class="pillars-results-toolbar">
-        <div>
-          <p class="muted" id="projectMeta"></p>
-        </div>
-      </div>
 
       <div class="pillar-panels">
         <!-- 1. Onboarding & Adoption -->

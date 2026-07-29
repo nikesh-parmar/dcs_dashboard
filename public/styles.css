@@ -124,38 +124,59 @@ a:hover {
   padding: 1.5rem 0 3.5rem;
 }
 
-.agent-hero {
-  margin: 0 0 1.25rem;
-  background: var(--br-yellow);
-  border-radius: 20px;
-  padding: 1.6rem 1.75rem 1.45rem;
-  box-shadow: 0 10px 28px rgba(17, 17, 17, 0.08);
-}
-
-.agent-hero-inner {
+.hub-welcome {
+  margin: 0 0 1.15rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1.5rem;
 }
 
-.agent-hero h1 {
+.hub-welcome-main {
+  display: flex;
+  align-items: center;
+  gap: 0.95rem;
+  min-width: 0;
+}
+
+.hub-avatar {
+  flex: 0 0 auto;
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 50%;
+  background: var(--br-yellow);
+  color: var(--br-black);
+  display: grid;
+  place-items: center;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.hub-welcome-copy h1 {
   margin: 0;
   font-family: var(--display);
   font-weight: 800;
   letter-spacing: -0.04em;
-  color: #2a2a2a;
-  font-size: clamp(1.55rem, 3.2vw, 2.35rem);
-  line-height: 1.12;
+  color: var(--br-black);
+  font-size: clamp(1.7rem, 3.4vw, 2.45rem);
+  line-height: 1.1;
 }
 
-.agent-hero-subtitle {
-  margin: 0.45rem 0 0;
-  font-family: var(--display);
-  font-weight: 500;
-  font-size: clamp(1.05rem, 2vw, 1.35rem);
-  color: #3a3a3a;
-  letter-spacing: -0.02em;
+.hub-welcome-sub {
+  margin: 0.4rem 0 0;
+  color: var(--br-muted);
+  font-size: 0.98rem;
+  line-height: 1.45;
+  max-width: 36rem;
+}
+
+.hub-welcome-brand {
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
+  flex: 0 0 auto;
 }
 
 .bloomreach-wordmark {
@@ -167,12 +188,344 @@ a:hover {
   text-transform: lowercase;
 }
 
-.pillars-intro {
-  margin: 0 0 1.35rem;
+.hub-agent-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.7rem;
+  border-radius: var(--radius-pill);
+  background: var(--br-yellow);
+  color: var(--br-black);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hub-home {
+  margin: 1.25rem 0 0;
+}
+
+.hub-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(17rem, 0.9fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.hub-col {
+  display: grid;
+  gap: 1rem;
+}
+
+.hub-card {
+  background: #fff;
+  border: 1px solid var(--br-line);
+  border-radius: 18px;
+  padding: 1.05rem 1.15rem;
+  box-shadow: var(--shadow);
+}
+
+.hub-card-label {
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--br-muted);
+}
+
+.hub-card-invite {
+  background: var(--br-yellow);
+  border-color: transparent;
+}
+
+.hub-invite-badge {
+  display: inline-flex;
+  padding: 0.22rem 0.55rem;
+  border-radius: 8px;
+  background: var(--br-black);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hub-invite-row {
+  margin-top: 0.7rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.hub-card-invite h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+}
+
+.hub-invite-meta {
+  margin: 0.55rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.25rem;
+  color: #333;
+  font-size: 0.88rem;
+}
+
+.hub-nba-rank {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2rem;
+  height: 1.7rem;
+  padding: 0 0.45rem;
+  border-radius: 8px;
+  background: #f3f4f6;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #374151;
+  margin-bottom: 0.45rem;
+}
+
+.hub-nba-body h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.hub-nba-body p {
+  margin: 0.35rem 0 0;
+  color: #444;
+  line-height: 1.4;
+}
+
+.hub-nba-metrics {
+  margin: 0.85rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.hub-metric {
+  background: #fff8d6;
+  border-radius: 12px;
+  padding: 0.65rem 0.7rem;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.hub-metric strong {
+  font-size: 0.95rem;
+  color: var(--br-black);
+}
+
+.hub-metric span {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.hub-nba-actions {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.hub-health-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.hub-score-ring {
+  --score: 78;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at center, #fff 62%, transparent 63%),
+    conic-gradient(var(--br-yellow) calc(var(--score) * 1%), #ececec 0);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.55rem;
+}
+
+.hub-health-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 1rem;
+}
+
+.hub-health-stat {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.hub-health-stat .label {
+  font-size: 0.78rem;
+  color: var(--br-muted);
+  font-weight: 600;
+}
+
+.hub-health-stat .value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.hub-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+
+.hub-dot.ok { background: var(--br-ok); }
+.hub-dot.warn { background: #e67e22; }
+.hub-dot.danger { background: var(--br-danger); }
+
+.hub-academy-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #444;
+}
+
+.hub-progress-track {
+  flex: 1;
+  height: 0.45rem;
+  border-radius: var(--radius-pill);
+  background: #ececec;
+  overflow: hidden;
+}
+
+.hub-progress-bar {
+  height: 100%;
+  background: var(--br-yellow);
+  border-radius: inherit;
+}
+
+.hub-academy-section {
+  margin-top: 0.85rem;
+}
+
+.hub-academy-section h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--br-muted);
+}
+
+.hub-academy-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.hub-academy-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+}
+
+.hub-academy-list a {
+  text-decoration: none;
   color: var(--br-ink);
-  font-size: 1.05rem;
-  line-height: 1.5;
-  max-width: 46rem;
+  font-weight: 600;
+}
+
+.hub-academy-list a:hover {
+  color: var(--br-yellow-deep);
+}
+
+.hub-course-badge {
+  flex: 0 0 auto;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.45rem;
+  border-radius: 8px;
+  background: #fff4b8;
+  color: #7a5a00;
+}
+
+.hub-course-badge.do-next {
+  background: var(--br-black);
+  color: #fff;
+}
+
+.hub-course-check {
+  color: var(--br-ok);
+  font-weight: 800;
+}
+
+.hub-card-support {
+  background: var(--br-black);
+  border-color: transparent;
+  color: #fff;
+}
+
+.hub-card-support h2 {
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.hub-card-support p {
+  margin: 0.45rem 0 0.9rem;
+  color: #d4d4d4;
+  line-height: 1.4;
+}
+
+.hub-support-actions {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.hub-support-link {
+  color: var(--br-yellow) !important;
+  font-size: 0.88rem;
+  text-decoration: none;
+}
+
+.hub-home-footer {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--br-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  box-shadow: none;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  color: var(--br-black);
+  background: transparent;
+  transform: none;
 }
 
 h1,
@@ -1974,21 +2327,30 @@ tbody tr:hover {
   .table-tools,
   .site-footer,
   .topbar,
-  .agent-hero-inner,
+  .hub-welcome,
+  .hub-invite-row,
   .pillars-results-toolbar,
   .pillar-panel-head {
     flex-direction: column;
     align-items: start;
   }
 
+  .hub-welcome-brand {
+    justify-items: start;
+  }
+
+  .hub-grid,
+  .hub-nba-metrics,
+  .hub-health-body,
+  .hub-health-stats,
   .pillars-grid,
   .pillar-tabs,
   .pillar-panel .usecase-grid {
     grid-template-columns: 1fr;
   }
 
-  .agent-hero h1 {
-    font-size: clamp(1.35rem, 5.5vw, 1.9rem);
+  .hub-welcome-copy h1 {
+    font-size: clamp(1.45rem, 6vw, 2rem);
   }
 
   .table-tools input {

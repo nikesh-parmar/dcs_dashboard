@@ -18,6 +18,14 @@ const els = {
   dataQualityList: document.getElementById("dataQualityList"),
   successPlanningBody: document.getElementById("successPlanningBody"),
   serviceRecEmpty: document.getElementById("serviceRecEmpty"),
+  hubHome: document.getElementById("hubHome"),
+  hubAvatar: document.getElementById("hubAvatar"),
+  hubWelcomeTitle: document.getElementById("hubWelcomeTitle"),
+  hubNbaBody: document.getElementById("hubNbaBody"),
+  hubHealthBody: document.getElementById("hubHealthBody"),
+  hubAcademyBody: document.getElementById("hubAcademyBody"),
+  explorePillarsBtn: document.getElementById("explorePillarsBtn"),
+  backToHubBtn: document.getElementById("backToHubBtn"),
   kpiData: document.getElementById("kpiData"),
   channelAdoptionSummary: document.getElementById("channelAdoptionSummary"),
   channelAdoptionNote: document.getElementById("channelAdoptionNote"),
@@ -119,6 +127,7 @@ function setConnected(connected, status = null) {
 async function refreshStatus() {
   const status = await api("/api/status");
   setConnected(status.connected, status);
+  updateWelcome(status.user);
   if (status.connected) {
     await loadOrganizations();
   }
@@ -172,12 +181,35 @@ async function connect() {
 
 function hideResults() {
   if (els.resultsSection) els.resultsSection.classList.add("hidden");
+  if (els.hubHome) els.hubHome.classList.add("hidden");
+}
+
+function showHubHome() {
+  if (els.hubHome) els.hubHome.classList.remove("hidden");
+  if (els.resultsSection) els.resultsSection.classList.add("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function showPillars(pillar = "onboarding") {
+  if (els.hubHome) els.hubHome.classList.add("hidden");
+  if (!els.resultsSection) return;
+  els.resultsSection.classList.remove("hidden");
+  selectPillarTab(pillar);
+  window.scrollTo({ top: els.resultsSection.offsetTop - 72, behavior: "smooth" });
 }
 
 function showResults() {
-  if (!els.resultsSection) return;
-  els.resultsSection.classList.remove("hidden");
-  selectPillarTab("onboarding");
+  showHubHome();
+}
+
+function updateWelcome(user) {
+  const firstName = String(user?.firstName || user?.name || "there").trim() || "there";
+  const initials = String(user?.initials || firstName.slice(0, 2)).toUpperCase() || "BR";
+  if (els.hubWelcomeTitle) {
+    els.hubWelcomeTitle.textContent =
+      firstName.toLowerCase() === "there" ? "Welcome" : `Welcome ${firstName}`;
+  }
+  if (els.hubAvatar) els.hubAvatar.textContent = initials.slice(0, 2);
 }
 
 function selectPillarTab(name) {
@@ -195,6 +227,7 @@ async function disconnect() {
   await api("/api/disconnect", { method: "POST" });
   setConnected(false);
   hideResults();
+  updateWelcome({ firstName: "there", initials: "BR" });
   setStatus("Disconnected from Loomi.");
 }
 
@@ -216,6 +249,7 @@ function pollUntilConnected() {
         clearInterval(authPollTimer);
         authPollTimer = null;
         lastOpenedAuthUrl = null;
+        updateWelcome(status.user);
         setStatus("Connected to Loomi.");
         if (status.connected) await loadOrganizations();
         return;
@@ -620,6 +654,8 @@ function renderAudit(data) {
   renderUseCaseCenter(data.adoptionOpportunities || [], data.scenarios || [], data.verticalAssessment || null);
   renderDataQuality(data.dataQuality || {});
   renderSuccessPlanning(data);
+  renderHubHome(data);
+  renderEnablementAcademy(data.academyCourses || null);
 
   if (els.serviceRecEmpty && els.useCaseCenterList) {
     const hasCards = els.useCaseCenterList.children.length > 0;
@@ -645,6 +681,244 @@ function filterGapAnalysisItems(items = []) {
     }
     return true;
   });
+}
+
+function pickTopHubActions(ai, adoptionOpportunities = []) {
+  const gleanItems = [];
+  if (ai?.available) {
+    for (const item of ai.adoption || []) {
+      gleanItems.push({
+        title: item.title || item.basedOn || "Scenario recommendation",
+        narrative: item.narrative,
+        action: item.action,
+        scenario: item.scenario || item.basedOn,
+        expectedLift: item.expectedLift || null,
+        effort: item.effort || null,
+      });
+    }
+  }
+  const fallback = filterGapAnalysisItems(adoptionOpportunities).map((item) => ({
+    title: item.title,
+    narrative: item.detail,
+    action: item.action,
+    scenario: item.scenario || item.area,
+    expectedLift: item.impact ? `${item.impact} impact` : null,
+    effort: item.effort || null,
+  }));
+  const seen = new Set();
+  const top = [];
+  for (const item of [...gleanItems, ...fallback]) {
+    const key = String(item.title || "").toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    top.push(item);
+    if (top.length >= 5) break;
+  }
+  return top;
+}
+
+function computeHubHealth(data) {
+  const findings = data.findings || [];
+  const dqIssues = data.dataQuality?.issues || [];
+  let score = 92;
+  for (const f of findings) {
+    if (f.severity === "high") score -= 10;
+    else if (f.severity === "medium") score -= 5;
+    else score -= 2;
+  }
+  for (const i of dqIssues) {
+    if (i.severity === "high") score -= 7;
+    else if (i.severity === "medium") score -= 4;
+    else score -= 2;
+  }
+  score = Math.max(12, Math.min(99, score));
+
+  const trackingFindings = findings.filter((f) =>
+    /event|tracking|schema|mapping|property/i.test(`${f.area || ""} ${f.title || ""}`)
+  );
+  const consentFindings = findings.filter((f) =>
+    /consent/i.test(`${f.area || ""} ${f.title || ""}`)
+  );
+  const catalogsOk = Boolean(
+    data.catalogsAvailable !== false && (data.catalogs || []).length > 0
+  );
+  const dqHigh = dqIssues.filter((i) => i.severity === "high" || i.severity === "medium");
+
+  const tracking =
+    trackingFindings.some((f) => f.severity === "high")
+      ? { label: "Needs work", tone: "danger" }
+      : trackingFindings.length
+        ? { label: "Review", tone: "warn" }
+        : { label: "Healthy", tone: "ok" };
+
+  const consent =
+    consentFindings.some((f) => f.severity === "high")
+      ? { label: "Needs work", tone: "danger" }
+      : consentFindings.length
+        ? { label: "Review", tone: "warn" }
+        : { label: "Healthy", tone: "ok" };
+
+  const catalog = catalogsOk
+    ? { label: "Up to date", tone: "ok" }
+    : { label: "Not detected", tone: "warn" };
+
+  const dataQuality =
+    dqHigh.length > 2
+      ? { label: `${dqHigh.length} issues flagged`, tone: "danger" }
+      : dqIssues.length
+        ? { label: `${dqIssues.length} to review`, tone: "warn" }
+        : { label: "Looking good", tone: "ok" };
+
+  return {
+    score,
+    stats: [
+      { label: "Tracking coverage", value: tracking.label, tone: tracking.tone },
+      { label: "Consent capture", value: consent.label, tone: consent.tone },
+      { label: "Catalog sync", value: catalog.label, tone: catalog.tone },
+      { label: "Data quality", value: dataQuality.label, tone: dataQuality.tone },
+    ],
+  };
+}
+
+function renderHubHome(data) {
+  if (!els.hubHome) return;
+  const top = pickTopHubActions(data.aiInsights || null, data.adoptionOpportunities || []);
+  const topAction = top[0] || null;
+  const plan = (data.aiInsights?.successPlans || []).find(
+    (p) =>
+      topAction &&
+      String(p.title || p.basedOn || "")
+        .toLowerCase()
+        .includes(String(topAction.title || "").toLowerCase().slice(0, 24))
+  );
+
+  if (els.hubNbaBody) {
+    if (!topAction) {
+      els.hubNbaBody.innerHTML = `<p class="muted">No high-value opportunity yet. Check Recommendations after reloading.</p>`;
+    } else {
+      const lift =
+        plan?.expectedLift ||
+        topAction.expectedLift ||
+        "High-value journey gap";
+      const effortLabel = plan?.effort || topAction.effort || "medium";
+      const setup =
+        effortLabel === "low" ? "~20 min" : effortLabel === "high" ? "~2 hrs" : "~45 min";
+      const ready =
+        /ready|mapped|available|met/i.test(
+          `${topAction.narrative || ""} ${plan?.currentBenchmark || ""}`
+        )
+          ? "Ready"
+          : "Check prerequisites";
+      els.hubNbaBody.innerHTML = `
+        <div class="hub-nba-rank">#1</div>
+        <h3>${escapeHtml(topAction.title)}</h3>
+        <p>${escapeHtml(
+          topAction.narrative ||
+            plan?.currentBenchmark ||
+            "Priority opportunity from the project audit."
+        )}</p>
+        <div class="hub-nba-metrics">
+          <div class="hub-metric"><strong>${escapeHtml(String(lift).slice(0, 42))}</strong><span>Est. value / lift</span></div>
+          <div class="hub-metric"><strong>${escapeHtml(setup)}</strong><span>Time to set up</span></div>
+          <div class="hub-metric"><strong>${escapeHtml(ready)}</strong><span>Data prerequisites</span></div>
+        </div>
+        <div class="hub-nba-actions">
+          <button type="button" class="btn btn-primary" data-hub-nav="recommendations">Start building</button>
+          <button type="button" class="btn" data-hub-nav="success">View the playbook</button>
+        </div>`;
+    }
+  }
+
+  if (els.hubHealthBody) {
+    const health = computeHubHealth(data);
+    els.hubHealthBody.innerHTML = `
+      <div class="hub-score-ring" style="--score:${health.score}" aria-label="Health score ${health.score}">${health.score}</div>
+      <div class="hub-health-stats">
+        ${health.stats
+          .map(
+            (s) => `
+          <div class="hub-health-stat">
+            <span class="label">${escapeHtml(s.label)}</span>
+            <span class="value"><span class="hub-dot ${escapeHtml(s.tone)}"></span>${escapeHtml(s.value)}</span>
+          </div>`
+          )
+          .join("")}
+      </div>
+      <div class="hub-nba-actions" style="grid-column: 1 / -1">
+        <button type="button" class="btn" data-hub-nav="performance">Open data audit</button>
+      </div>`;
+  }
+
+  if (els.hubAcademyBody) {
+    const academy = data.academyCourses || {};
+    const foundations = Array.isArray(academy.foundations) ? academy.foundations : [];
+    const suggested = Array.isArray(academy.suggested) ? academy.suggested : [];
+    const relatedCount = suggested.length;
+    const total = Math.max(relatedCount + foundations.length, 5);
+    const ready = Math.min(foundations.length, 3);
+    const pct = Math.round((ready / total) * 100);
+
+    if (!relatedCount && academy.error) {
+      els.hubAcademyBody.innerHTML = `<p class="muted">${escapeHtml(
+        academy.needsAuth
+          ? "Connect Loomi to load Academy course recommendations."
+          : academy.error
+      )}</p>
+      <p><a href="https://academy.bloomreach.com/" target="_blank" rel="noopener noreferrer">Open Bloomreach Academy</a></p>`;
+    } else {
+      els.hubAcademyBody.innerHTML = `
+        <div class="hub-academy-progress">
+          <span>${ready} core · ${relatedCount} matched</span>
+          <div class="hub-progress-track"><div class="hub-progress-bar" style="width:${pct}%"></div></div>
+        </div>
+        ${
+          foundations.length
+            ? `<div class="hub-academy-section">
+                <h4>Core curriculum</h4>
+                <ul class="hub-academy-list">
+                  ${foundations
+                    .slice(0, 3)
+                    .map(
+                      (c) => `
+                    <li>
+                      <a href="${escapeHtml(c.url || "https://academy.bloomreach.com/")}" target="_blank" rel="noopener noreferrer">${escapeHtml(c.title)}</a>
+                      <span class="hub-course-check" aria-hidden="true">✓</span>
+                    </li>`
+                    )
+                    .join("")}
+                </ul>
+              </div>`
+            : ""
+        }
+        <div class="hub-academy-section">
+          <h4>Suggested for your opportunities</h4>
+          <ul class="hub-academy-list">
+            ${
+              suggested.length
+                ? suggested
+                    .map(
+                      (c) => `
+                <li>
+                  <div>
+                    <a href="${escapeHtml(c.url || "https://academy.bloomreach.com/")}" target="_blank" rel="noopener noreferrer">${escapeHtml(c.title)}</a>
+                    ${
+                      c.relatedTo
+                        ? `<div class="muted" style="font-size:0.78rem">For: ${escapeHtml(c.relatedTo)}</div>`
+                        : ""
+                    }
+                  </div>
+                  <span class="hub-course-badge ${c.badge === "do_next" ? "do-next" : ""}">${
+                    c.badge === "do_next" ? "Do next" : "Recommended"
+                  }</span>
+                </li>`
+                    )
+                    .join("")
+                : `<li class="muted">No matched courses yet — browse <a href="https://academy.bloomreach.com/" target="_blank" rel="noopener noreferrer">Academy</a>.</li>`
+            }
+          </ul>
+        </div>`;
+    }
+  }
 }
 
 function renderChannelAdoption(overview = {}) {
@@ -1992,6 +2266,35 @@ document.querySelectorAll(".pillar-tab").forEach((tab) => {
     selectPillarTab(tab.dataset.pillar);
   });
 });
+
+function bindHubNavigation(root = document) {
+  root.querySelectorAll("[data-hub-nav]").forEach((el) => {
+    if (el.dataset.hubBound === "1") return;
+    el.dataset.hubBound = "1";
+    el.addEventListener("click", () => {
+      const pillar = el.getAttribute("data-hub-nav") || "onboarding";
+      showPillars(pillar);
+    });
+  });
+}
+
+if (els.explorePillarsBtn) {
+  els.explorePillarsBtn.addEventListener("click", () => showPillars("onboarding"));
+}
+if (els.backToHubBtn) {
+  els.backToHubBtn.addEventListener("click", () => {
+    if (auditData) showHubHome();
+  });
+}
+
+document.getElementById("hubHome")?.addEventListener("click", (event) => {
+  const target = event.target.closest("[data-hub-nav]");
+  if (!target) return;
+  event.preventDefault();
+  showPillars(target.getAttribute("data-hub-nav") || "onboarding");
+});
+
+bindHubNavigation();
 
 els.connectBtn.addEventListener("click", async () => {
   const status = await api("/api/status");
