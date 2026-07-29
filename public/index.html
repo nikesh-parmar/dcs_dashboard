@@ -58,27 +58,14 @@
           <option value="">Select an organization</option>
         </select>
       </label>
-      <button id="auditBtn" type="button" class="btn btn-dark" disabled>Run audit</button>
+      <button id="auditBtn" type="button" class="btn btn-dark" disabled>Show Project Dashboard</button>
     </section>
 
     <p id="statusMsg" class="status" role="status"></p>
 
     <div id="auditProgress" class="audit-progress hidden" aria-live="polite">
-      <div id="auditWaitGame" class="audit-wait-game" aria-label="Noughts and crosses while the audit runs">
-        <div class="audit-wait-game-head">
-          <div>
-            <p class="audit-wait-game-eyebrow">While you wait</p>
-            <h3 class="audit-wait-game-title">Noughts &amp; crosses</h3>
-          </div>
-          <span id="auditGameStatus" class="audit-game-status">You are yellow · Computer is teal</span>
-        </div>
-        <div id="auditGameBoard" class="ttt-board" role="grid" aria-label="Noughts and crosses board"></div>
-        <div class="audit-wait-game-actions">
-          <button type="button" id="auditGameReset" class="btn btn-secondary">New game</button>
-        </div>
-      </div>
       <div class="audit-progress-head">
-        <span id="auditProgressLabel">Running audit…</span>
+        <span id="auditProgressLabel">Loading project dashboard…</span>
         <span id="auditProgressPct">0%</span>
       </div>
       <div class="audit-progress-track">
@@ -87,10 +74,10 @@
       <p id="auditProgressDetail" class="muted audit-progress-detail">Starting…</p>
     </div>
 
-    <section id="resultsSection" class="pillars-results">
+    <section id="resultsSection" class="pillars-results hidden">
       <div class="pillars-results-toolbar">
         <div>
-          <p class="muted" id="projectMeta">Connect and run an audit to populate pillar insights for a project.</p>
+          <p class="muted" id="projectMeta"></p>
         </div>
         <button id="exportHtmlBtn" type="button" class="btn btn-secondary" disabled title="Download an HTML report you can upload to Google Docs">
           Export HTML for Google Docs
@@ -114,77 +101,78 @@
         </div>
       </div>
 
-      <div class="pillars-grid" role="list">
+      <nav id="pillarTabs" class="pillar-tabs" role="tablist" aria-label="Four pillars of support">
+        <button type="button" class="pillar-tab active" role="tab" aria-selected="true" data-pillar="onboarding">Onboarding &amp; Adoption</button>
+        <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="performance">Performance &amp; Analysis</button>
+        <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="recommendations">Recommendations &amp; Optimization</button>
+        <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="success">Success &amp; Support</button>
+      </nav>
+
+      <div class="pillar-panels">
         <!-- 1. Onboarding & Adoption -->
-        <article class="pillar" role="listitem">
-          <div class="pillar-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4.5 16.5 12 4l7.5 12.5" />
-              <path d="M9 14h6" />
-              <path d="M10.5 20h3" />
-            </svg>
-          </div>
-          <h2 class="pillar-title">Onboarding &amp; Adoption</h2>
+        <article id="pillar-onboarding" class="pillar-panel" role="tabpanel">
+          <header class="pillar-panel-head">
+            <div class="pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4.5 16.5 12 4l7.5 12.5" />
+                <path d="M9 14h6" />
+                <path d="M10.5 20h3" />
+              </svg>
+            </div>
+            <h2 class="pillar-title">Onboarding &amp; Adoption</h2>
+          </header>
           <div class="pillar-subs">
             <section class="pillar-sub" id="sub-onboarding-enablement">
               <h3>Onboarding &amp; Enablement <span class="pillar-sub-note">(Quarterzip, Academy, Docs)</span></h3>
               <div class="pillar-sub-body">
                 <ul class="enablement-links">
+                  <li><a href="https://www.quarterzip.ai/" target="_blank" rel="noopener noreferrer">Quarterzip agent</a></li>
+                  <li><a href="https://academy.bloomreach.com/" target="_blank" rel="noopener noreferrer">Bloomreach Academy</a></li>
                   <li><a href="https://documentation.bloomreach.com/engagement" target="_blank" rel="noopener noreferrer">Engagement docs</a></li>
                   <li><a href="https://documentation.bloomreach.com/engagement/docs/about-use-case-center" target="_blank" rel="noopener noreferrer">Use Case Center</a></li>
-                  <li><a href="https://academy.bloomreach.com/" target="_blank" rel="noopener noreferrer">Bloomreach Academy</a></li>
                 </ul>
-                <p class="muted pillar-placeholder">Enablement paths and onboarding assets for this client will surface here.</p>
               </div>
             </section>
-            <section class="pillar-sub" id="sub-events">
-              <h3>Events</h3>
+            <section class="pillar-sub" id="sub-channel-adoption">
+              <h3>Channel adoption</h3>
               <div class="pillar-sub-body">
-                <div class="table-tools compact">
-                  <input id="eventsFilter" type="search" placeholder="Filter events…" />
-                  <span id="eventsCount" class="muted"></span>
-                </div>
-                <div class="table-wrap compact">
-                  <table id="eventsTable">
-                    <thead>
-                      <tr>
-                        <th>Event</th>
-                        <th>Class</th>
-                        <th>30d</th>
-                        <th>All time</th>
-                      </tr>
-                    </thead>
-                    <tbody></tbody>
-                  </table>
-                </div>
+                <p class="muted pillar-placeholder">What is being utilised across channels for this project.</p>
+                <div id="channelAdoptionSummary" class="kpi-grid kpi-grid-channels"></div>
+                <p id="channelAdoptionNote" class="muted pillar-summary"></p>
               </div>
             </section>
           </div>
         </article>
 
         <!-- 2. Performance & Analysis -->
-        <article class="pillar" role="listitem">
-          <div class="pillar-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 19V5" />
-              <path d="M4 19h16" />
-              <path d="M8 16V10" />
-              <path d="M12 16V7" />
-              <path d="M16 16v-4" />
-            </svg>
-          </div>
-          <h2 class="pillar-title">Performance &amp; Analysis</h2>
+        <article id="pillar-performance" class="pillar-panel hidden" role="tabpanel">
+          <header class="pillar-panel-head">
+            <div class="pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19V5" />
+                <path d="M4 19h16" />
+                <path d="M8 16V10" />
+                <path d="M12 16V7" />
+                <path d="M16 16v-4" />
+              </svg>
+            </div>
+            <h2 class="pillar-title">Performance &amp; Analysis</h2>
+          </header>
           <div class="pillar-subs">
             <section class="pillar-sub" id="sub-qa-analysis">
               <h3>QA / Analysis</h3>
               <div class="pillar-sub-body">
-                <div id="dataQualitySummary" class="pillar-summary muted">Run an audit to load QA signals.</div>
+                <div id="dataQualitySummary" class="pillar-summary muted">Show the project dashboard to load QA signals.</div>
                 <div id="dataQualityList" class="findings compact-findings"></div>
               </div>
             </section>
             <section class="pillar-sub" id="sub-data-audits">
               <h3>Data Audits</h3>
               <div class="pillar-sub-body">
+                <div class="data-audit-overview">
+                  <h4 class="data-audit-overview-title">Project overview</h4>
+                  <div id="kpiData" class="kpi-grid"></div>
+                </div>
                 <div id="findingsList" class="findings compact-findings"></div>
               </div>
             </section>
@@ -202,28 +190,29 @@
                   <li>Review consent categories and suppression lists before high-volume sends.</li>
                   <li>Monitor open, click, and complaint rates on live automations.</li>
                 </ul>
-                <p class="muted pillar-placeholder">Client-specific deliverability guidance will appear here after audit enrichment.</p>
               </div>
             </section>
           </div>
         </article>
 
         <!-- 3. Recommendations & Optimization -->
-        <article class="pillar" role="listitem">
-          <div class="pillar-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 18h6" />
-              <path d="M10 21h4" />
-              <path d="M12 3a6 6 0 0 0-3.5 10.8c.7.5 1.1 1.2 1.2 2.2h4.6c.1-1 .5-1.7 1.2-2.2A6 6 0 0 0 12 3z" />
-            </svg>
-          </div>
-          <h2 class="pillar-title">Recommendations &amp; Optimization</h2>
+        <article id="pillar-recommendations" class="pillar-panel hidden" role="tabpanel">
+          <header class="pillar-panel-head">
+            <div class="pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18h6" />
+                <path d="M10 21h4" />
+                <path d="M12 3a6 6 0 0 0-3.5 10.8c.7.5 1.1 1.2 1.2 2.2h4.6c.1-1 .5-1.7 1.2-2.2A6 6 0 0 0 12 3z" />
+              </svg>
+            </div>
+            <h2 class="pillar-title">Recommendations &amp; Optimization</h2>
+          </header>
           <div class="pillar-subs">
             <section class="pillar-sub" id="sub-next-best-action">
               <h3>Next Best Action</h3>
               <div class="pillar-sub-body">
-                <div id="adoptionAiList" class="ai-insights-list"></div>
-                <div id="findingsAiList" class="ai-insights-list"></div>
+                <p class="muted pillar-placeholder">Top 5 high-value scenario recommendations from Glean.</p>
+                <div id="nextBestActionList" class="ai-insights-list"></div>
               </div>
             </section>
             <section class="pillar-sub" id="sub-service-recommendations">
@@ -237,28 +226,49 @@
         </article>
 
         <!-- 4. Success & Support -->
-        <article class="pillar" role="listitem">
-          <div class="pillar-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
-              <path d="M16 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
-              <path d="M3.5 19c.6-2.2 2.5-3.5 4.5-3.5h0c1.2 0 2.3.4 3.1 1.1" />
-              <path d="M13 16.6c.8-.7 1.9-1.1 3.1-1.1h0c2 0 3.9 1.3 4.5 3.5" />
-              <path d="M9.5 14.5 12 17l5-5" />
-            </svg>
-          </div>
-          <h2 class="pillar-title">Success &amp; Support</h2>
+        <article id="pillar-success" class="pillar-panel hidden" role="tabpanel">
+          <header class="pillar-panel-head">
+            <div class="pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
+                <path d="M16 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
+                <path d="M3.5 19c.6-2.2 2.5-3.5 4.5-3.5h0c1.2 0 2.3.4 3.1 1.1" />
+                <path d="M13 16.6c.8-.7 1.9-1.1 3.1-1.1h0c2 0 3.9 1.3 4.5 3.5" />
+                <path d="M9.5 14.5 12 17l5-5" />
+              </svg>
+            </div>
+            <h2 class="pillar-title">Success &amp; Support</h2>
+          </header>
           <div class="pillar-subs">
             <section class="pillar-sub" id="sub-success-planning">
               <h3>Success Planning</h3>
               <div class="pillar-sub-body">
-                <div id="successPlanningBody" class="pillar-summary muted">Run an audit to load success-planning context.</div>
+                <div id="successPlanningBody" class="pillar-summary muted">Show the project dashboard to load success-planning context.</div>
               </div>
             </section>
             <section class="pillar-sub" id="sub-support-escalation">
               <h3>Support / Escalation</h3>
               <div class="pillar-sub-body">
-                <div id="otherChecksList" class="other-checks"></div>
+                <ul class="enablement-links support-links">
+                  <li>
+                    <a href="https://support.bloomreach.com/hc/en-us/articles/18550445647517-How-To-Contact-Support" target="_blank" rel="noopener noreferrer">
+                      How to contact Bloomreach Support
+                    </a>
+                    <span class="muted support-link-note">Help Center — portal, email, and Engagement messenger</span>
+                  </li>
+                  <li>
+                    <a href="https://www.quarterzip.ai/" target="_blank" rel="noopener noreferrer">
+                      Quarterzip agent
+                    </a>
+                    <span class="muted support-link-note">Guided onboarding and live troubleshooting with the Quarterzip agent</span>
+                  </li>
+                  <li>
+                    <a href="https://support.bloomreach.com/" target="_blank" rel="noopener noreferrer">
+                      Support portal
+                    </a>
+                    <span class="muted support-link-note">Open or track tickets at support.bloomreach.com</span>
+                  </li>
+                </ul>
               </div>
             </section>
           </div>

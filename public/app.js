@@ -12,16 +12,17 @@ const els = {
   projectMeta: document.getElementById("projectMeta"),
   findingsList: document.getElementById("findingsList"),
   adoptionList: document.getElementById("adoptionList"),
-  findingsAiList: document.getElementById("findingsAiList"),
-  adoptionAiList: document.getElementById("adoptionAiList"),
+  nextBestActionList: document.getElementById("nextBestActionList"),
   verticalAssessment: document.getElementById("verticalAssessment"),
   useCaseCenterList: document.getElementById("useCaseCenterList"),
   dataQualitySummary: document.getElementById("dataQualitySummary"),
   dataQualityList: document.getElementById("dataQualityList"),
   successPlanningBody: document.getElementById("successPlanningBody"),
   serviceRecEmpty: document.getElementById("serviceRecEmpty"),
-  eventsFilter: document.getElementById("eventsFilter"),
-  eventsCount: document.getElementById("eventsCount"),
+  kpiData: document.getElementById("kpiData"),
+  channelAdoptionSummary: document.getElementById("channelAdoptionSummary"),
+  channelAdoptionNote: document.getElementById("channelAdoptionNote"),
+  pillarTabs: document.getElementById("pillarTabs"),
   exportHtmlBtn: document.getElementById("exportHtmlBtn"),
   clientBriefCard: document.getElementById("clientBriefCard"),
   clientBriefTitle: document.getElementById("clientBriefTitle"),
@@ -35,9 +36,6 @@ const els = {
   auditProgressLabel: document.getElementById("auditProgressLabel"),
   auditProgressPct: document.getElementById("auditProgressPct"),
   auditProgressDetail: document.getElementById("auditProgressDetail"),
-  auditGameBoard: document.getElementById("auditGameBoard"),
-  auditGameStatus: document.getElementById("auditGameStatus"),
-  auditGameReset: document.getElementById("auditGameReset"),
 };
 
 /** @type {any} */
@@ -170,11 +168,8 @@ async function connect() {
 }
 
 function hideResults() {
+  if (els.resultsSection) els.resultsSection.classList.add("hidden");
   if (els.exportHtmlBtn) els.exportHtmlBtn.disabled = true;
-  if (els.projectMeta) {
-    els.projectMeta.textContent =
-      "Connect and run an audit to populate pillar insights for a project.";
-  }
   if (els.clientBriefCard) els.clientBriefCard.classList.add("hidden");
 }
 
@@ -182,6 +177,18 @@ function showResults() {
   if (!els.resultsSection) return;
   els.resultsSection.classList.remove("hidden");
   if (els.exportHtmlBtn) els.exportHtmlBtn.disabled = false;
+  selectPillarTab("onboarding");
+}
+
+function selectPillarTab(name) {
+  document.querySelectorAll(".pillar-tab").forEach((tab) => {
+    const active = tab.dataset.pillar === name;
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  document.querySelectorAll(".pillar-panel").forEach((panel) => {
+    panel.classList.toggle("hidden", panel.id !== `pillar-${name}`);
+  });
 }
 
 async function disconnect() {
@@ -300,14 +307,14 @@ async function runAudit() {
   if (!projectId) return;
 
   els.auditBtn.disabled = true;
-  setStatus("Running data audit…");
+  setStatus("Loading project dashboard…");
   hideResults();
-  showAuditProgress(true, { detail: "Starting audit…", percent: 1 });
+  showAuditProgress(true, { detail: "Starting…", percent: 1 });
 
   try {
     auditData = await runAuditWithProgress(projectId);
     renderAudit(auditData);
-    setStatus(`Audit complete for ${auditData.project.name}.`);
+    setStatus(`Dashboard ready for ${auditData.project.name}.`);
   } catch (err) {
     if (err.needsAuth && err.authUrl) {
       setStatus("Session expired. Re-authenticating…", true);
@@ -325,8 +332,6 @@ async function runAudit() {
 function showAuditProgress(visible, update = null) {
   if (!els.auditProgress) return;
   els.auditProgress.classList.toggle("hidden", !visible);
-  if (visible) startWaitGame();
-  else stopWaitGame();
   if (update) updateAuditProgress(update);
 }
 
@@ -336,155 +341,10 @@ function updateAuditProgress({ detail, percent, step } = {}) {
   if (els.auditProgressPct) els.auditProgressPct.textContent = `${Math.round(pct)}%`;
   if (els.auditProgressDetail && detail) els.auditProgressDetail.textContent = detail;
   if (els.auditProgressLabel) {
-    els.auditProgressLabel.textContent = step === "done" ? "Audit complete" : "Running audit…";
+    els.auditProgressLabel.textContent =
+      step === "done" ? "Dashboard ready" : "Loading project dashboard…";
   }
 }
-
-/* --- Bloomreach-themed noughts & crosses (while audit loads) --- */
-const WAIT_GAME = {
-  active: false,
-  board: Array(9).fill(null),
-  over: false,
-  aiTimer: null,
-  humanStartsNext: true,
-  humanStarts: true,
-};
-
-const WAIT_WINS = [
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
-  [0, 4, 8],
-  [2, 4, 6],
-];
-
-function startWaitGame() {
-  WAIT_GAME.active = true;
-  resetWaitGame();
-}
-
-function stopWaitGame() {
-  WAIT_GAME.active = false;
-  if (WAIT_GAME.aiTimer) {
-    clearTimeout(WAIT_GAME.aiTimer);
-    WAIT_GAME.aiTimer = null;
-  }
-}
-
-function resetWaitGame() {
-  if (WAIT_GAME.aiTimer) {
-    clearTimeout(WAIT_GAME.aiTimer);
-    WAIT_GAME.aiTimer = null;
-  }
-  WAIT_GAME.board = Array(9).fill(null);
-  WAIT_GAME.over = false;
-  WAIT_GAME.humanStarts = WAIT_GAME.humanStartsNext;
-  WAIT_GAME.humanStartsNext = !WAIT_GAME.humanStartsNext;
-  renderWaitGame();
-  if (WAIT_GAME.humanStarts) {
-    setWaitGameStatus("Your move — yellow (X)");
-  } else {
-    setWaitGameStatus("Computer starts — teal (O)");
-    scheduleWaitGameAi();
-  }
-}
-
-function setWaitGameStatus(text) {
-  if (els.auditGameStatus) els.auditGameStatus.textContent = text;
-}
-
-function waitGameWinner(board = WAIT_GAME.board) {
-  for (const [a, b, c] of WAIT_WINS) {
-    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-      return { player: board[a], line: [a, b, c] };
-    }
-  }
-  if (board.every(Boolean)) return { player: "draw", line: [] };
-  return null;
-}
-
-function renderWaitGame() {
-  if (!els.auditGameBoard) return;
-  const result = waitGameWinner();
-  const winLine = result?.line || [];
-  els.auditGameBoard.innerHTML = WAIT_GAME.board
-    .map((cell, i) => {
-      const cls = [
-        "ttt-cell",
-        cell === "x" ? "x" : "",
-        cell === "o" ? "o" : "",
-        winLine.includes(i) ? "win" : "",
-      ]
-        .filter(Boolean)
-        .join(" ");
-      const label = cell === "x" ? "×" : cell === "o" ? "○" : "";
-      const disabled = !WAIT_GAME.active || WAIT_GAME.over || Boolean(cell);
-      return `<button type="button" class="${cls}" data-ttt="${i}" aria-label="Cell ${i + 1}" ${
-        disabled ? "disabled" : ""
-      }>${label}</button>`;
-    })
-    .join("");
-}
-
-function playWaitGameMove(index, player) {
-  if (!WAIT_GAME.active || WAIT_GAME.over || WAIT_GAME.board[index]) return false;
-  WAIT_GAME.board[index] = player;
-  const result = waitGameWinner();
-  renderWaitGame();
-  if (result) {
-    WAIT_GAME.over = true;
-    if (result.player === "draw") setWaitGameStatus("Draw — new game?");
-    else if (result.player === "x") setWaitGameStatus("You win — nice!");
-    else setWaitGameStatus("Computer wins — try again");
-      return true;
-  }
-  return true;
-}
-
-function bestWaitGameAiMove() {
-  const board = WAIT_GAME.board;
-  const empties = board.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0);
-
-  const tryWin = (player) => {
-    for (const i of empties) {
-      const next = board.slice();
-      next[i] = player;
-      if (waitGameWinner(next)?.player === player) return i;
-    }
-    return null;
-  };
-
-  return tryWin("o") ?? tryWin("x") ?? (board[4] ? null : 4) ?? empties[Math.floor(Math.random() * empties.length)];
-}
-
-function scheduleWaitGameAi() {
-  if (!WAIT_GAME.active || WAIT_GAME.over) return;
-  setWaitGameStatus("Computer is thinking…");
-  WAIT_GAME.aiTimer = setTimeout(() => {
-    WAIT_GAME.aiTimer = null;
-    if (!WAIT_GAME.active || WAIT_GAME.over) return;
-    const move = bestWaitGameAiMove();
-    if (move == null) return;
-    playWaitGameMove(move, "o");
-    if (!WAIT_GAME.over) setWaitGameStatus("Your move — yellow (X)");
-  }, 380 + Math.random() * 420);
-}
-
-els.auditGameBoard?.addEventListener("click", (event) => {
-  const btn = event.target.closest("[data-ttt]");
-  if (!btn || !WAIT_GAME.active || WAIT_GAME.over) return;
-  const index = Number(btn.dataset.ttt);
-  if (!playWaitGameMove(index, "x")) return;
-  if (!WAIT_GAME.over) scheduleWaitGameAi();
-});
-
-els.auditGameReset?.addEventListener("click", () => {
-  if (!WAIT_GAME.active) return;
-  resetWaitGame();
-});
 
 function runAuditWithProgress(projectId) {
   return new Promise((resolve, reject) => {
@@ -732,6 +592,7 @@ async function refreshClientBrief() {
 }
 
 function renderAudit(data) {
+  const o = data.overview || {};
   renderClientBrief(data);
   if (els.projectMeta) {
     els.projectMeta.innerHTML = [
@@ -746,15 +607,29 @@ function renderAudit(data) {
       .join(" · ");
   }
 
+  renderKpiSection(els.kpiData, [
+    ["Customers", o.totalCustomers],
+    [
+      "Events — all time / 30d",
+      `${formatNumber(o.totalEvents)} / ${formatNumber(o.events30d)}`,
+    ],
+    ["Event types", o.eventTypeCount ?? (data.events || []).length],
+    [
+      "Attributes",
+      `${formatNumber(o.attributeCount)}${o.maxCustomerProperties ? ` / ${formatNumber(o.maxCustomerProperties)}` : ""}`,
+    ],
+    ["Consent categories", o.consentCategoryCount],
+    ["IDs", `${o.hardIdCount ?? 0} hard / ${o.softIdCount ?? 0} soft`],
+  ]);
+
+  renderChannelAdoption(o);
   renderFindings(data.findings || []);
-  renderAdoptionOpportunities(data.adoptionOpportunities || []);
-  renderAiInsights(data.aiInsights || null);
+  renderAdoptionOpportunities(filterGapAnalysisItems(data.adoptionOpportunities || []));
+  renderNextBestActions(data.aiInsights || null, data.adoptionOpportunities || []);
   renderVerticalAssessment(data.verticalAssessment || null);
   renderUseCaseCenter(data.adoptionOpportunities || [], data.scenarios || [], data.verticalAssessment || null);
   renderDataQuality(data.dataQuality || {});
   renderSuccessPlanning(data);
-  renderOtherChecks();
-  renderEventsTable(data.events || []);
 
   if (els.serviceRecEmpty && els.useCaseCenterList) {
     const hasCards = els.useCaseCenterList.children.length > 0;
@@ -763,12 +638,143 @@ function renderAudit(data) {
 
   if (Array.isArray(data.toolErrors) && data.toolErrors.length) {
     setStatus(
-      `Audit complete for ${data.project.name} (some optional tools failed: ${data.toolErrors.map((e) => e.tool).join(", ")})`,
+      `Dashboard ready for ${data.project.name} (some optional tools failed: ${data.toolErrors.map((e) => e.tool).join(", ")})`,
       true
     );
   }
 
   showResults();
+}
+
+function filterGapAnalysisItems(items = []) {
+  return items.filter((item) => {
+    const hay = `${item.area || ""} ${item.title || ""} ${item.detail || ""} ${item.action || ""}`.toLowerCase();
+    if (/weblayer|web layer|banner/.test(hay)) return false;
+    if (/recommendation engine|recommendations\+|recs\+|product recommendations|include product recommendations|power abandon browse with product recommendations|upgrade welcome recommendations/.test(hay)) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function renderChannelAdoption(overview = {}) {
+  const root = els.channelAdoptionSummary;
+  if (!root) return;
+  const channels = overview.channels || [];
+  renderKpiSection(
+    root,
+    [
+      ["Email", channelPill(channels, "Email")],
+      ["SMS", channelPill(channels, "SMS")],
+      ["WhatsApp", channelPill(channels, "WhatsApp")],
+      ["Push", channelPill(channels, "Push")],
+      ["Weblayer", channelPill(channels, "Weblayer")],
+      ["In App", channelPill(channels, "In App")],
+    ],
+    { compact: true }
+  );
+
+  const used = Array.isArray(overview.channelsUsed)
+    ? overview.channelsUsed
+    : channels.filter((c) => c.used || c.status === "utilised").map((c) => c.name);
+  const unused = Array.isArray(overview.channelsAvailableUnused)
+    ? overview.channelsAvailableUnused
+    : channels.filter((c) => !(c.used || c.status === "utilised")).map((c) => c.name);
+
+  if (els.channelAdoptionNote) {
+    const parts = [];
+    if (used.length) parts.push(`Utilised: ${used.join(", ")}`);
+    if (unused.length) parts.push(`Not utilised: ${unused.join(", ")}`);
+    els.channelAdoptionNote.textContent = parts.join(" · ") || "No channel usage signals returned.";
+  }
+}
+
+function renderNextBestActions(ai, adoptionOpportunities = []) {
+  const root = els.nextBestActionList;
+  if (!root) return;
+
+  const gleanItems = [];
+  if (ai?.available) {
+    for (const item of ai.adoption || []) {
+      gleanItems.push({
+        source: "Glean",
+        title: item.title || item.basedOn || "Scenario recommendation",
+        basedOn: item.basedOn,
+        narrative: item.narrative,
+        action: item.action,
+        scenario: item.scenario,
+      });
+    }
+    for (const item of ai.extras || []) {
+      const hay = `${item.area || ""} ${item.title || ""} ${item.detail || ""}`;
+      if (/scenario|journey|automation|use case|campaign|abandon|welcome|win.?back|reactivat/i.test(hay)) {
+        gleanItems.push({
+          source: "Glean",
+          title: item.title || "Scenario recommendation",
+          basedOn: item.area,
+          narrative: item.detail || item.rationale,
+          action: item.action,
+        });
+      }
+    }
+  }
+
+  const fallback = (adoptionOpportunities || [])
+    .filter((item) => {
+      const hay = `${item.area || ""} ${item.title || ""}`.toLowerCase();
+      return !/weblayer|web layer/.test(hay);
+    })
+    .map((item) => ({
+      source: "Audit",
+      title: item.title,
+      basedOn: item.scenario || item.area,
+      narrative: item.detail,
+      action: item.action,
+      scenario: item.scenario,
+    }));
+
+  const seen = new Set();
+  const top = [];
+  for (const item of [...gleanItems, ...fallback]) {
+    const key = String(item.title || "").toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    top.push(item);
+    if (top.length >= 5) break;
+  }
+
+  if (!top.length) {
+    root.innerHTML = `<p class="muted ai-insights-empty">${escapeHtml(
+      ai?.error ||
+        (ai?.needsAuth
+          ? "Glean authentication required — use Connect in the header."
+          : "No high-value scenario recommendations yet. Connect Glean and reload the dashboard.")
+    )}</p>`;
+    return;
+  }
+
+  root.innerHTML = top
+    .map(
+      (item, index) => `
+      <article class="ai-insight-card nba-card">
+        <span class="ai-insight-badge">${escapeHtml(item.source)} · #${index + 1}</span>
+        <div>
+          <h3>${escapeHtml(item.title)}</h3>
+          ${
+            item.scenario || item.basedOn
+              ? `<p class="muted ai-insight-based">${escapeHtml(
+                  item.scenario
+                    ? `Scenario: ${item.scenario}`
+                    : `Based on: ${item.basedOn}`
+                )}</p>`
+              : ""
+          }
+          ${item.narrative ? `<p>${escapeHtml(item.narrative)}</p>` : ""}
+          ${item.action ? `<p><strong>Next:</strong> ${escapeHtml(item.action)}</p>` : ""}
+        </div>
+      </article>`
+    )
+    .join("");
 }
 
 function renderSuccessPlanning(data) {
@@ -2062,20 +2068,9 @@ function linkifyText(value) {
   return text;
 }
 
-document.querySelectorAll(".primary-tabs .tab").forEach((tab) => {
+document.querySelectorAll(".pillar-tab").forEach((tab) => {
   tab.addEventListener("click", () => {
-    selectPrimaryTab(tab.dataset.primaryTab);
-  });
-});
-
-document.querySelectorAll(".data-tabs .tab").forEach((tab) => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".data-tabs .tab").forEach((t) => {
-      t.classList.toggle("active", t === tab);
-      t.setAttribute("aria-selected", t === tab ? "true" : "false");
-    });
-    document.querySelectorAll("#primary-data .tab-panel").forEach((panel) => panel.classList.add("hidden"));
-    document.getElementById(`tab-${tab.dataset.tab}`)?.classList.remove("hidden");
+    selectPillarTab(tab.dataset.pillar);
   });
 });
 
@@ -2104,7 +2099,7 @@ els.auditBtn.addEventListener("click", runAudit);
 
 els.exportHtmlBtn?.addEventListener("click", () => {
   if (!auditData) {
-    setStatus("Run an audit before exporting.", true);
+    setStatus("Show the project dashboard before exporting.", true);
     return;
   }
   try {
@@ -2113,10 +2108,6 @@ els.exportHtmlBtn?.addEventListener("click", () => {
   } catch (err) {
     setStatus(err.message || String(err), true);
   }
-});
-
-els.eventsFilter?.addEventListener("input", () => {
-  if (auditData) renderEventsTable(auditData.events || []);
 });
 
 refreshStatus().catch((err) => setStatus(err.message, true));
