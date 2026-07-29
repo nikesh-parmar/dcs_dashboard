@@ -537,7 +537,8 @@ function buildFindings({
 
   const hardIds = identifiers.filter((i) => i.type === "hard");
   const softIds = identifiers.filter((i) => i.type === "soft");
-  if (!hardIds.length) {
+  // Skip when identifier schema was not loaded (empty list is indistinguishable from "none configured").
+  if (identifiers.length && !hardIds.length) {
     findings.push({
       severity: "high",
       area: "Identifiers",
@@ -3115,23 +3116,11 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     project_id: projectId,
   });
 
-  progress("eventVolumes", "Counting events & customers (last 30 days)…", 12);
-  const eventVolumes = await loadEventVolumes(loomi, projectId, toolErrors, {
-    onProgress,
-  });
-
-  progress("properties", "Loading customer properties…", 18);
-  const propertySchema = await loomi.callTool("get_customer_property_schema", {
-    project_id: projectId,
-  });
-
-  progress("identifiers", "Loading customer identifiers…", 22);
-  const identifierSchema = await callOptional(
-    loomi,
-    "get_customer_schema",
-    { project_id: projectId },
-    toolErrors
-  );
+  // Skipped for faster dashboard loads: event volume EQL, customer property schema,
+  // and customer identifier schema.
+  const eventVolumes = { d30: new Map(), ok: false, events30d: null };
+  const propertySchema = { properties: [] };
+  const identifierSchema = null;
 
   progress("mapping", "Loading data mapping…", 28);
   const mapping = await callOptional(
@@ -3184,16 +3173,25 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     toolErrors
   );
 
-  const recommendations = await loadAiPersonalization(
-    loomi,
-    projectId,
-    scenarios.scenarios,
-    toolErrors,
-    { onProgress }
-  );
+  // Skipped: recommendation engines, predictions, and autosegments MCP loads.
+  const recommendations = {
+    engines: [],
+    runningCount: 0,
+    totalCount: 0,
+    scenarioHits: [],
+    used: false,
+    recommendationCatalogRefs: [],
+    features: {
+      recommendations: { used: false, count: 0, detail: "Skipped" },
+      contextualPersonalization: { used: false, count: 0, detail: "Not detected" },
+      predictions: { used: false, count: 0, detail: "Skipped" },
+      autosegments: { used: false, count: 0, detail: "Skipped" },
+      recommendationsPlus: { used: false, count: 0, detail: "Skipped" },
+    },
+  };
 
   const catalogResult = await loadCatalogs(loomi, project, mapping, toolErrors, {
-    recommendationCatalogRefs: recommendations.recommendationCatalogRefs || [],
+    recommendationCatalogRefs: [],
     onProgress,
   });
 

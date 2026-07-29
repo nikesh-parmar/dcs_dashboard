@@ -607,17 +607,9 @@ function renderAudit(data) {
 
   renderKpiSection(els.kpiData, [
     ["Customers", o.totalCustomers],
-    [
-      "Events — all time / 30d",
-      `${formatNumber(o.totalEvents)} / ${formatNumber(o.events30d)}`,
-    ],
+    ["Events — all time", o.totalEvents],
     ["Event types", o.eventTypeCount ?? (data.events || []).length],
-    [
-      "Attributes",
-      `${formatNumber(o.attributeCount)}${o.maxCustomerProperties ? ` / ${formatNumber(o.maxCustomerProperties)}` : ""}`,
-    ],
     ["Consent categories", o.consentCategoryCount],
-    ["IDs", `${o.hardIdCount ?? 0} hard / ${o.softIdCount ?? 0} soft`],
   ]);
 
   renderChannelAdoption(o);
@@ -789,9 +781,9 @@ function renderSuccessPlanning(data) {
   if (vertical.summary || vertical.headline) {
     parts.push(`<p><strong>Vertical focus:</strong> ${escapeHtml(vertical.summary || vertical.headline)}</p>`);
   }
-  if (overview.totalCustomers != null || overview.events30d != null) {
+  if (overview.totalCustomers != null || overview.totalEvents != null) {
     parts.push(
-      `<p class="muted">${formatNumber(overview.totalCustomers)} customers · ${formatNumber(overview.events30d)} events / 30d</p>`
+      `<p class="muted">${formatNumber(overview.totalCustomers)} customers · ${formatNumber(overview.totalEvents)} events</p>`
     );
   }
   if (!parts.length) {
