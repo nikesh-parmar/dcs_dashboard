@@ -33,6 +33,9 @@ const els = {
   hubChatForm: document.getElementById("hubChatForm"),
   hubChatInput: document.getElementById("hubChatInput"),
   hubChatSend: document.getElementById("hubChatSend"),
+  loomiAssistantPanel: document.getElementById("loomiAssistantPanel"),
+  loomiAssistantToggle: document.getElementById("loomiAssistantToggle"),
+  loomiAssistantClose: document.getElementById("loomiAssistantClose"),
   hubPillarNav: document.getElementById("hubPillarNav"),
   backToHubBtn: document.getElementById("backToHubBtn"),
   kpiData: document.getElementById("kpiData"),
@@ -751,22 +754,33 @@ async function loadEnablementSpotlight() {
 /** @type {Array<{ role: string, content: string }>} */
 let docsChatHistory = [];
 
-function appendChatBubble(role, content, sources = []) {
+function setLoomiAssistantOpen(open) {
+  const panel = els.loomiAssistantPanel;
+  const toggle = els.loomiAssistantToggle;
+  if (!panel || !toggle) return;
+  panel.classList.toggle("hidden", !open);
+  panel.setAttribute("aria-hidden", open ? "false" : "true");
+  toggle.setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) {
+    els.hubChatInput?.focus?.();
+  }
+}
+
+function appendChatBubble(role, content, docsLink = null) {
   if (!els.hubChatLog) return;
   const bubble = document.createElement("div");
-  bubble.className = `hub-chat-bubble ${role === "user" ? "hub-chat-user" : "hub-chat-bot"}`;
-  bubble.innerHTML = linkifyText(content);
-  if (sources.length) {
-    const list = document.createElement("ul");
-    list.className = "hub-chat-sources";
-    for (const source of sources.slice(0, 3)) {
-      const li = document.createElement("li");
-      li.innerHTML = `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
-        source.title || source.url
-      )}</a>`;
-      list.appendChild(li);
-    }
-    bubble.appendChild(list);
+  bubble.className = `loomi-chat-bubble ${role === "user" ? "loomi-chat-user" : "loomi-chat-bot"}`;
+  const text = document.createElement("div");
+  text.textContent = String(content || "");
+  bubble.appendChild(text);
+  if (role !== "user" && docsLink?.url) {
+    const link = document.createElement("a");
+    link.className = "loomi-chat-docs";
+    link.href = docsLink.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = docsLink.title ? `Docs: ${docsLink.title}` : "Read the docs →";
+    bubble.appendChild(link);
   }
   els.hubChatLog.appendChild(bubble);
   els.hubChatLog.scrollTop = els.hubChatLog.scrollHeight;
@@ -781,7 +795,7 @@ async function submitDocsChat(event) {
   docsChatHistory.push({ role: "user", content: question });
 
   if (els.hubChatSend) els.hubChatSend.disabled = true;
-  appendChatBubble("assistant", "Looking through Bloomreach docs…");
+  appendChatBubble("assistant", "Checking Bloomreach docs…");
   const pending = els.hubChatLog?.lastElementChild || null;
 
   try {
@@ -798,15 +812,28 @@ async function submitDocsChat(event) {
       throw err;
     }
     if (pending) pending.remove();
-    appendChatBubble("assistant", data.answer || "No answer returned.", data.sources || []);
+    const docsLink =
+      data.docsLink ||
+      (Array.isArray(data.sources) && data.sources[0]
+        ? { title: data.sources[0].title, url: data.sources[0].url }
+        : null);
+    appendChatBubble(
+      "assistant",
+      data.answer || "I couldn’t find a short answer for that.",
+      docsLink
+    );
     docsChatHistory.push({ role: "assistant", content: data.answer || "" });
-    if (docsChatHistory.length > 12) docsChatHistory = docsChatHistory.slice(-12);
+    if (docsChatHistory.length > 10) docsChatHistory = docsChatHistory.slice(-10);
   } catch (err) {
     if (pending) pending.remove();
     if (err.needsAuth && err.authUrl) {
       appendChatBubble(
         "assistant",
-        "Loomi authentication required to search Bloomreach docs. Use Connect in the header, then try again."
+        "Connect Loomi in the header, then ask again.",
+        {
+          title: "Bloomreach Engagement docs",
+          url: "https://documentation.bloomreach.com/engagement",
+        }
       );
       window.open(err.authUrl, "_blank", "noopener,noreferrer");
     } else {
@@ -2449,6 +2476,21 @@ if (els.backToHubBtn) {
 if (els.hubChatForm) {
   els.hubChatForm.addEventListener("submit", submitDocsChat);
 }
+
+if (els.loomiAssistantToggle) {
+  els.loomiAssistantToggle.addEventListener("click", () => {
+    const open = els.loomiAssistantPanel?.classList.contains("hidden");
+    setLoomiAssistantOpen(Boolean(open));
+  });
+}
+
+if (els.loomiAssistantClose) {
+  els.loomiAssistantClose.addEventListener("click", () => setLoomiAssistantOpen(false));
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") setLoomiAssistantOpen(false);
+});
 
 document.getElementById("hubHome")?.addEventListener("click", (event) => {
   const target = event.target.closest("[data-hub-nav]");

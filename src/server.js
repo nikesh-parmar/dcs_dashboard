@@ -286,11 +286,13 @@ app.post("/api/docs-chat", async (req, res) => {
       return res.status(502).json({
         error: result.error || "Docs chat failed",
         answer: result.answer || "",
+        docsLink: result.docsLink || null,
         sources: result.sources || [],
       });
     }
     res.json({
       answer: result.answer,
+      docsLink: result.docsLink || null,
       sources: result.sources || [],
     });
   } catch (err) {
