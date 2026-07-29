@@ -24,11 +24,7 @@ const els = {
   hubNbaBody: document.getElementById("hubNbaBody"),
   hubHealthBody: document.getElementById("hubHealthBody"),
   hubAcademyBody: document.getElementById("hubAcademyBody"),
-  hubInviteBadge: document.getElementById("hubInviteBadge"),
-  hubInviteTitle: document.getElementById("hubInviteTitle"),
-  hubInviteMeta: document.getElementById("hubInviteMeta"),
-  hubInviteEvents: document.getElementById("hubInviteEvents"),
-  hubInviteCta: document.getElementById("hubInviteCta"),
+  hubInviteBody: document.getElementById("hubInviteBody"),
   hubChatLog: document.getElementById("hubChatLog"),
   hubChatForm: document.getElementById("hubChatForm"),
   hubChatInput: document.getElementById("hubChatInput"),
@@ -688,66 +684,58 @@ function renderAudit(data) {
   showResults();
 }
 
-function renderEnablementSpotlight(payload) {
-  const featured = payload?.featured || payload?.nextMasterclass || null;
-  const edgeEvents = Array.isArray(payload?.edgeEvents) ? payload.edgeEvents : [];
-  const extras = Array.isArray(payload?.all)
-    ? payload.all.filter((e) => !featured || e.id !== featured.id)
-    : edgeEvents;
+function kindLabel(kind) {
+  if (kind === "masterclass") return "Masterclass";
+  if (kind === "academy_live" || kind === "academy-live") return "Academy live";
+  if (kind === "edge") return "Edge";
+  return "Event";
+}
 
-  if (els.hubInviteBadge) {
-    els.hubInviteBadge.textContent = featured?.badge || "Enablement spotlight";
+function renderEnablementSpotlight(payload) {
+  const root = els.hubInviteBody;
+  if (!root) return;
+  const events = Array.isArray(payload?.all) ? payload.all : [];
+  if (!events.length) {
+    root.innerHTML = `<p class="muted">No upcoming enablement events right now. Check <a href="https://academy.bloomreach.com/calendar" target="_blank" rel="noopener noreferrer">Academy calendar</a>.</p>`;
+    return;
   }
-  if (els.hubInviteTitle) {
-    els.hubInviteTitle.textContent = featured?.title || "Upcoming Bloomreach events";
-  }
-  if (els.hubInviteMeta) {
-    if (featured) {
-      els.hubInviteMeta.innerHTML = [
-        featured.when ? `<li>${escapeHtml(featured.when)}</li>` : "",
-        featured.where ? `<li>${escapeHtml(featured.where)}</li>` : "",
-        featured.detail ? `<li>${escapeHtml(featured.detail)}</li>` : "",
-      ]
-        .filter(Boolean)
-        .join("");
-    } else {
-      els.hubInviteMeta.innerHTML = `<li>No upcoming masterclass right now — check Edge Summit dates below.</li>`;
-    }
-  }
-  if (els.hubInviteCta && featured) {
-    els.hubInviteCta.href = featured.ctaUrl || "https://theedgesummit.com/";
-    els.hubInviteCta.textContent = featured.ctaLabel || "View event →";
-  }
-  if (els.hubInviteEvents) {
-    const chips = extras.slice(0, 3);
-    els.hubInviteEvents.innerHTML = chips.length
-      ? chips
-          .map(
-            (event) => `
-        <a class="hub-event-chip" href="${escapeHtml(event.ctaUrl || "#")}" target="_blank" rel="noopener noreferrer">
-          <span class="hub-event-kind ${event.kind === "edge" ? "edge" : ""}">${escapeHtml(
-            event.kind === "edge" ? "Edge" : "Masterclass"
-          )}</span>
-          <strong>${escapeHtml(event.title)}</strong>
-          <span>${escapeHtml([event.when, event.where].filter(Boolean).join(" · "))}</span>
-        </a>`
-          )
-          .join("")
-      : "";
-  }
+
+  root.innerHTML = `
+    <ul class="hub-enablement-list">
+      ${events
+        .map((event) => {
+          const kindClass = String(event.kind || "event").replaceAll("_", "-");
+          const meta = [event.when, event.where].filter(Boolean).join(" · ");
+          return `
+        <li class="hub-enablement-item">
+          <div class="hub-enablement-item-head">
+            <span class="hub-event-kind ${escapeHtml(kindClass)}">${escapeHtml(
+              event.badge || kindLabel(event.kind)
+            )}</span>
+          </div>
+          <h3>${escapeHtml(event.title)}</h3>
+          ${meta ? `<p class="hub-enablement-meta">${escapeHtml(meta)}</p>` : ""}
+          ${event.detail ? `<p>${escapeHtml(event.detail)}</p>` : ""}
+          <a class="hub-enablement-cta" href="${escapeHtml(
+            event.ctaUrl || "https://academy.bloomreach.com/calendar"
+          )}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+            event.ctaLabel || "Learn more"
+          )} →</a>
+        </li>`;
+        })
+        .join("")}
+    </ul>`;
 }
 
 async function loadEnablementSpotlight() {
-  if (!els.hubInviteTitle) return;
+  if (!els.hubInviteBody) return;
   try {
     const data = await api("/api/enablement-events");
     renderEnablementSpotlight(data);
   } catch (err) {
-    if (els.hubInviteMeta) {
-      els.hubInviteMeta.innerHTML = `<li class="muted">${escapeHtml(
-        err.message || "Could not load upcoming events."
-      )}</li>`;
-    }
+    els.hubInviteBody.innerHTML = `<p class="muted">${escapeHtml(
+      err.message || "Could not load upcoming events."
+    )}</p>`;
   }
 }
 

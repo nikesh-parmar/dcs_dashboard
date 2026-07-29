@@ -266,68 +266,66 @@ a:hover {
   color: var(--br-muted);
 }
 
-.hub-card-invite {
-  background: var(--br-yellow);
-  border-color: transparent;
+.hub-enablement-body {
+  display: grid;
+  gap: 0.65rem;
 }
 
-.hub-invite-badge {
-  display: inline-flex;
-  padding: 0.22rem 0.55rem;
-  border-radius: 8px;
-  background: var(--br-black);
-  color: #fff;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.hub-invite-row {
-  margin-top: 0.7rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 1rem;
-}
-
-.hub-card-invite h2 {
+.hub-enablement-list {
   margin: 0;
-  font-size: clamp(1.15rem, 2vw, 1.45rem);
-}
-
-.hub-invite-meta {
-  margin: 0.55rem 0 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 0.25rem;
-  color: #333;
-  font-size: 0.88rem;
+  gap: 0.55rem;
 }
 
-.hub-invite-events {
-  margin-top: 0.75rem;
+.hub-enablement-item {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.35rem;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid var(--br-line);
+  border-radius: 14px;
+  background: #fafafa;
 }
 
-.hub-event-chip {
-  display: grid;
-  gap: 0.15rem;
-  padding: 0.55rem 0.65rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(17, 17, 17, 0.08);
+.hub-enablement-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.65rem;
 }
 
-.hub-event-chip strong {
-  font-size: 0.9rem;
+.hub-enablement-item h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 0.98rem;
+  letter-spacing: -0.02em;
 }
 
-.hub-event-chip span {
+.hub-enablement-item p {
+  margin: 0;
+  color: #555;
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.hub-enablement-item .hub-enablement-meta {
+  color: var(--br-muted);
   font-size: 0.78rem;
-  color: #444;
+}
+
+.hub-enablement-item a.hub-enablement-cta {
+  justify-self: start;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--br-black);
+  border-bottom: 1px solid var(--br-yellow);
+}
+
+.hub-enablement-item a.hub-enablement-cta:hover {
+  color: var(--br-yellow-deep);
 }
 
 .hub-event-kind {
@@ -337,15 +335,26 @@ a:hover {
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  padding: 0.15rem 0.4rem;
-  border-radius: 6px;
-  background: var(--br-black);
-  color: #fff;
-  margin-bottom: 0.15rem;
+  padding: 0.18rem 0.45rem;
+  border-radius: 8px;
+  background: #fff4b8;
+  color: #7a5a00;
 }
 
 .hub-event-kind.edge {
-  background: #1d4ed8;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.hub-event-kind.academy_live,
+.hub-event-kind.academy-live {
+  background: #e8f8f4;
+  color: #0f766e;
+}
+
+.hub-event-kind.masterclass {
+  background: #111;
+  color: #fff;
 }
 
 .hub-nba-rank {
@@ -2574,7 +2583,6 @@ tbody tr:hover {
   .site-footer,
   .topbar,
   .hub-welcome,
-  .hub-invite-row,
   .pillars-results-toolbar,
   .pillar-panel-head {
     flex-direction: column;
