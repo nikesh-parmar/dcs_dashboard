@@ -153,42 +153,6 @@ function buildAuditHtmlReport(data) {
     }
   }
 
-  const vertical = data.verticalAssessment;
-  if (vertical?.available) {
-    sections.push(`<h2>Vertical use-case check</h2>`);
-    sections.push(
-      `<p><strong>${reportEscape(vertical.vertical?.label || vertical.packLabel || "Vertical")}</strong> (${reportEscape(
-        vertical.vertical?.confidence || "low"
-      )} confidence)</p>`
-    );
-    if (vertical.coverageSummary) {
-      sections.push(`<p>${reportEscape(vertical.coverageSummary)}</p>`);
-    }
-    if (vertical.aiNarrative) {
-      sections.push(`<p>${reportEscape(vertical.aiNarrative)}</p>`);
-    }
-    if ((vertical.useCases || []).length) {
-      sections.push(`<ul>${vertical.useCases
-        .map(
-          (uc) =>
-            `<li><strong>[${reportEscape(uc.status)}]</strong> ${reportEscape(uc.title)} — ${reportEscape(
-              uc.evidence || ""
-            )}</li>`
-        )
-        .join("")}</ul>`);
-    }
-    if ((vertical.topGaps || []).length) {
-      sections.push(`<h3>Top gaps for feedback</h3><ul>${vertical.topGaps
-        .map(
-          (g) =>
-            `<li><strong>${reportEscape(g.title)}</strong>${
-              g.whyItMatters ? ` — ${reportEscape(g.whyItMatters)}` : ""
-            }${g.adopt ? `<br/><em>Adopt:</em> ${reportEscape(g.adopt)}` : ""}</li>`
-        )
-        .join("")}</ul>`);
-    }
-  }
-
   sections.push(`
     <h2>Data overview</h2>
     <ul>
