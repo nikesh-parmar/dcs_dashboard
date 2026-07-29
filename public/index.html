@@ -74,22 +74,28 @@
       <p id="auditProgressDetail" class="muted audit-progress-detail">Starting…</p>
     </div>
 
+    <nav id="hubPillarNav" class="hub-pillar-nav hidden" aria-label="Four pillars of support">
+      <button type="button" class="hub-pillar-btn" data-hub-nav="onboarding">Onboarding &amp; Adoption</button>
+      <button type="button" class="hub-pillar-btn" data-hub-nav="performance">Performance &amp; Analysis</button>
+      <button type="button" class="hub-pillar-btn" data-hub-nav="recommendations">Recommendations &amp; Optimization</button>
+      <button type="button" class="hub-pillar-btn" data-hub-nav="success">Success &amp; Support</button>
+    </nav>
+
     <section id="hubHome" class="hub-home hidden" aria-label="Project hub">
       <div class="hub-grid">
         <div class="hub-col hub-col-main">
-          <article class="hub-card hub-card-invite">
-            <span class="hub-invite-badge">Enablement spotlight</span>
+          <article class="hub-card hub-card-invite" id="hubEnablementSpotlight">
+            <span class="hub-invite-badge" id="hubInviteBadge">Enablement spotlight</span>
             <div class="hub-invite-row">
               <div>
-                <h2>Bloomreach Academy &amp; Use Case Center</h2>
-                <ul class="hub-invite-meta">
-                  <li>Self-serve courses matched to your gaps</li>
-                  <li>Playbooks for Engagement scenarios</li>
-                  <li>Quarterzip + Support when you need a human</li>
+                <h2 id="hubInviteTitle">Upcoming Bloomreach events</h2>
+                <ul class="hub-invite-meta" id="hubInviteMeta">
+                  <li>Loading upcoming masterclass and Edge events…</li>
                 </ul>
+                <div id="hubInviteEvents" class="hub-invite-events"></div>
               </div>
-              <a class="btn btn-dark" href="https://academy.bloomreach.com/" target="_blank" rel="noopener noreferrer">
-                Explore Academy →
+              <a class="btn btn-dark" id="hubInviteCta" href="https://theedgesummit.com/" target="_blank" rel="noopener noreferrer">
+                View events →
               </a>
             </div>
           </article>
@@ -125,19 +131,32 @@
 
           <article class="hub-card hub-card-support">
             <h2>Need a hand?</h2>
-            <p>Get further support — docs, escalation or a human CSM.</p>
+            <p>Ask about Bloomreach docs, or escalate to Support / a CSM.</p>
+            <div class="hub-docs-chat" id="hubDocsChat">
+              <div class="hub-chat-log" id="hubChatLog" aria-live="polite">
+                <div class="hub-chat-bubble hub-chat-bot">
+                  Ask me anything about Bloomreach Engagement docs — scenarios, tracking, deliverability, and more.
+                </div>
+              </div>
+              <form class="hub-chat-form" id="hubChatForm">
+                <input
+                  id="hubChatInput"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Ask a docs question…"
+                  aria-label="Ask a Bloomreach docs question"
+                />
+                <button type="submit" class="btn btn-primary" id="hubChatSend">Ask</button>
+              </form>
+            </div>
             <div class="hub-support-actions">
-              <button type="button" class="btn btn-primary" data-hub-nav="success">Get further support</button>
+              <button type="button" class="btn" data-hub-nav="success">Get further support</button>
               <a class="hub-support-link" href="https://support.bloomreach.com/hc/en-us/articles/18550445647517-How-To-Contact-Support" target="_blank" rel="noopener noreferrer">
                 Bloomreach Support
               </a>
             </div>
           </article>
         </div>
-      </div>
-
-      <div class="hub-home-footer">
-        <button type="button" id="explorePillarsBtn" class="btn btn-ghost">Explore all four pillars</button>
       </div>
     </section>
 

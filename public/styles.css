@@ -201,8 +201,37 @@ a:hover {
   text-transform: uppercase;
 }
 
+.hub-pillar-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 1rem 0 0;
+}
+
 .hub-home {
-  margin: 1.25rem 0 0;
+  margin: 1rem 0 0;
+}
+
+.hub-pillar-btn {
+  border: 1px solid var(--br-line);
+  background: #fff;
+  color: var(--br-black);
+  border-radius: 12px;
+  padding: 0.7rem 0.75rem;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.84rem;
+  line-height: 1.25;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.hub-pillar-btn:hover {
+  transform: translateY(-1px);
+  border-color: #d4d4d4;
+  background: #fffdf3;
 }
 
 .hub-grid {
@@ -275,6 +304,48 @@ a:hover {
   gap: 0.25rem;
   color: #333;
   font-size: 0.88rem;
+}
+
+.hub-invite-events {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.hub-event-chip {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(17, 17, 17, 0.08);
+}
+
+.hub-event-chip strong {
+  font-size: 0.9rem;
+}
+
+.hub-event-chip span {
+  font-size: 0.78rem;
+  color: #444;
+}
+
+.hub-event-kind {
+  display: inline-flex;
+  align-self: start;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  background: var(--br-black);
+  color: #fff;
+  margin-bottom: 0.15rem;
+}
+
+.hub-event-kind.edge {
+  background: #1d4ed8;
 }
 
 .hub-nba-rank {
@@ -496,21 +567,102 @@ a:hover {
   line-height: 1.4;
 }
 
+.hub-docs-chat {
+  margin: 0 0 0.9rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.hub-chat-log {
+  max-height: 220px;
+  overflow: auto;
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.55rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.hub-chat-bubble {
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.hub-chat-bot {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f5f5f5;
+}
+
+.hub-chat-user {
+  background: var(--br-yellow);
+  color: var(--br-black);
+  justify-self: end;
+  max-width: 92%;
+}
+
+.hub-chat-sources {
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+}
+
+.hub-chat-sources a {
+  color: var(--br-yellow) !important;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.hub-chat-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.45rem;
+}
+
+.hub-chat-form input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+  padding: 0.65rem 0.85rem;
+}
+
+.hub-chat-form input::placeholder {
+  color: #a3a3a3;
+}
+
+.hub-chat-form input:focus {
+  outline: 2px solid rgba(255, 204, 0, 0.55);
+  border-color: var(--br-yellow);
+}
+
 .hub-support-actions {
   display: grid;
   gap: 0.55rem;
+}
+
+.hub-support-actions .btn {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+  background: transparent;
+}
+
+.hub-support-actions .btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .hub-support-link {
   color: var(--br-yellow) !important;
   font-size: 0.88rem;
   text-decoration: none;
-}
-
-.hub-home-footer {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: center;
 }
 
 .btn-ghost {
@@ -2340,6 +2492,7 @@ tbody tr:hover {
   }
 
   .hub-grid,
+  .hub-pillar-nav,
   .hub-nba-metrics,
   .hub-health-body,
   .hub-health-stats,

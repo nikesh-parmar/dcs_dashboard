@@ -24,7 +24,16 @@ const els = {
   hubNbaBody: document.getElementById("hubNbaBody"),
   hubHealthBody: document.getElementById("hubHealthBody"),
   hubAcademyBody: document.getElementById("hubAcademyBody"),
-  explorePillarsBtn: document.getElementById("explorePillarsBtn"),
+  hubInviteBadge: document.getElementById("hubInviteBadge"),
+  hubInviteTitle: document.getElementById("hubInviteTitle"),
+  hubInviteMeta: document.getElementById("hubInviteMeta"),
+  hubInviteEvents: document.getElementById("hubInviteEvents"),
+  hubInviteCta: document.getElementById("hubInviteCta"),
+  hubChatLog: document.getElementById("hubChatLog"),
+  hubChatForm: document.getElementById("hubChatForm"),
+  hubChatInput: document.getElementById("hubChatInput"),
+  hubChatSend: document.getElementById("hubChatSend"),
+  hubPillarNav: document.getElementById("hubPillarNav"),
   backToHubBtn: document.getElementById("backToHubBtn"),
   kpiData: document.getElementById("kpiData"),
   channelAdoptionSummary: document.getElementById("channelAdoptionSummary"),
@@ -182,16 +191,20 @@ async function connect() {
 function hideResults() {
   if (els.resultsSection) els.resultsSection.classList.add("hidden");
   if (els.hubHome) els.hubHome.classList.add("hidden");
+  if (els.hubPillarNav) els.hubPillarNav.classList.add("hidden");
 }
 
 function showHubHome() {
   if (els.hubHome) els.hubHome.classList.remove("hidden");
+  if (els.hubPillarNav) els.hubPillarNav.classList.remove("hidden");
   if (els.resultsSection) els.resultsSection.classList.add("hidden");
+  loadEnablementSpotlight().catch(() => {});
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function showPillars(pillar = "onboarding") {
   if (els.hubHome) els.hubHome.classList.add("hidden");
+  if (els.hubPillarNav) els.hubPillarNav.classList.remove("hidden");
   if (!els.resultsSection) return;
   els.resultsSection.classList.remove("hidden");
   selectPillarTab(pillar);
@@ -670,6 +683,139 @@ function renderAudit(data) {
   }
 
   showResults();
+}
+
+function renderEnablementSpotlight(payload) {
+  const featured = payload?.featured || payload?.nextMasterclass || null;
+  const edgeEvents = Array.isArray(payload?.edgeEvents) ? payload.edgeEvents : [];
+  const extras = Array.isArray(payload?.all)
+    ? payload.all.filter((e) => !featured || e.id !== featured.id)
+    : edgeEvents;
+
+  if (els.hubInviteBadge) {
+    els.hubInviteBadge.textContent = featured?.badge || "Enablement spotlight";
+  }
+  if (els.hubInviteTitle) {
+    els.hubInviteTitle.textContent = featured?.title || "Upcoming Bloomreach events";
+  }
+  if (els.hubInviteMeta) {
+    if (featured) {
+      els.hubInviteMeta.innerHTML = [
+        featured.when ? `<li>${escapeHtml(featured.when)}</li>` : "",
+        featured.where ? `<li>${escapeHtml(featured.where)}</li>` : "",
+        featured.detail ? `<li>${escapeHtml(featured.detail)}</li>` : "",
+      ]
+        .filter(Boolean)
+        .join("");
+    } else {
+      els.hubInviteMeta.innerHTML = `<li>No upcoming masterclass right now — check Edge Summit dates below.</li>`;
+    }
+  }
+  if (els.hubInviteCta && featured) {
+    els.hubInviteCta.href = featured.ctaUrl || "https://theedgesummit.com/";
+    els.hubInviteCta.textContent = featured.ctaLabel || "View event →";
+  }
+  if (els.hubInviteEvents) {
+    const chips = extras.slice(0, 3);
+    els.hubInviteEvents.innerHTML = chips.length
+      ? chips
+          .map(
+            (event) => `
+        <a class="hub-event-chip" href="${escapeHtml(event.ctaUrl || "#")}" target="_blank" rel="noopener noreferrer">
+          <span class="hub-event-kind ${event.kind === "edge" ? "edge" : ""}">${escapeHtml(
+            event.kind === "edge" ? "Edge" : "Masterclass"
+          )}</span>
+          <strong>${escapeHtml(event.title)}</strong>
+          <span>${escapeHtml([event.when, event.where].filter(Boolean).join(" · "))}</span>
+        </a>`
+          )
+          .join("")
+      : "";
+  }
+}
+
+async function loadEnablementSpotlight() {
+  if (!els.hubInviteTitle) return;
+  try {
+    const data = await api("/api/enablement-events");
+    renderEnablementSpotlight(data);
+  } catch (err) {
+    if (els.hubInviteMeta) {
+      els.hubInviteMeta.innerHTML = `<li class="muted">${escapeHtml(
+        err.message || "Could not load upcoming events."
+      )}</li>`;
+    }
+  }
+}
+
+/** @type {Array<{ role: string, content: string }>} */
+let docsChatHistory = [];
+
+function appendChatBubble(role, content, sources = []) {
+  if (!els.hubChatLog) return;
+  const bubble = document.createElement("div");
+  bubble.className = `hub-chat-bubble ${role === "user" ? "hub-chat-user" : "hub-chat-bot"}`;
+  bubble.innerHTML = linkifyText(content);
+  if (sources.length) {
+    const list = document.createElement("ul");
+    list.className = "hub-chat-sources";
+    for (const source of sources.slice(0, 3)) {
+      const li = document.createElement("li");
+      li.innerHTML = `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+        source.title || source.url
+      )}</a>`;
+      list.appendChild(li);
+    }
+    bubble.appendChild(list);
+  }
+  els.hubChatLog.appendChild(bubble);
+  els.hubChatLog.scrollTop = els.hubChatLog.scrollHeight;
+}
+
+async function submitDocsChat(event) {
+  event?.preventDefault?.();
+  const question = String(els.hubChatInput?.value || "").trim();
+  if (!question) return;
+  if (els.hubChatInput) els.hubChatInput.value = "";
+  appendChatBubble("user", question);
+  docsChatHistory.push({ role: "user", content: question });
+
+  if (els.hubChatSend) els.hubChatSend.disabled = true;
+  appendChatBubble("assistant", "Looking through Bloomreach docs…");
+  const pending = els.hubChatLog?.lastElementChild || null;
+
+  try {
+    const res = await fetch("/api/docs-chat", {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ question, history: docsChatHistory.slice(0, -1) }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const err = new Error(data.error || `Request failed (${res.status})`);
+      err.needsAuth = data.needsAuth;
+      err.authUrl = data.authUrl;
+      throw err;
+    }
+    if (pending) pending.remove();
+    appendChatBubble("assistant", data.answer || "No answer returned.", data.sources || []);
+    docsChatHistory.push({ role: "assistant", content: data.answer || "" });
+    if (docsChatHistory.length > 12) docsChatHistory = docsChatHistory.slice(-12);
+  } catch (err) {
+    if (pending) pending.remove();
+    if (err.needsAuth && err.authUrl) {
+      appendChatBubble(
+        "assistant",
+        "Loomi authentication required to search Bloomreach docs. Use Connect in the header, then try again."
+      );
+      window.open(err.authUrl, "_blank", "noopener,noreferrer");
+    } else {
+      appendChatBubble("assistant", err.message || "Docs chat failed.");
+    }
+  } finally {
+    if (els.hubChatSend) els.hubChatSend.disabled = false;
+    els.hubChatInput?.focus?.();
+  }
 }
 
 function renderEnablementAcademy(academy) {
@@ -2294,16 +2440,24 @@ function bindHubNavigation(root = document) {
   });
 }
 
-if (els.explorePillarsBtn) {
-  els.explorePillarsBtn.addEventListener("click", () => showPillars("onboarding"));
-}
 if (els.backToHubBtn) {
   els.backToHubBtn.addEventListener("click", () => {
     if (auditData) showHubHome();
   });
 }
 
+if (els.hubChatForm) {
+  els.hubChatForm.addEventListener("submit", submitDocsChat);
+}
+
 document.getElementById("hubHome")?.addEventListener("click", (event) => {
+  const target = event.target.closest("[data-hub-nav]");
+  if (!target) return;
+  event.preventDefault();
+  showPillars(target.getAttribute("data-hub-nav") || "onboarding");
+});
+
+els.hubPillarNav?.addEventListener("click", (event) => {
   const target = event.target.closest("[data-hub-nav]");
   if (!target) return;
   event.preventDefault();
