@@ -592,7 +592,6 @@ async function refreshClientBrief() {
 
 function renderAudit(data) {
   const o = data.overview || {};
-  renderClientBrief(data);
   if (els.projectMeta) {
     els.projectMeta.innerHTML = [
       data.project.name,
