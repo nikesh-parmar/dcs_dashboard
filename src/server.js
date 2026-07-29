@@ -7,6 +7,8 @@ import { MultiRegionLoomi, parseMcpEndpoints } from "./loomi/multiClient.js";
 import { runProjectAudit } from "./loomi/audit.js";
 import { createGleanClient, fetchClientBrief } from "./glean/clientBrief.js";
 import { resolveUserIdentity } from "./loomi/userIdentity.js";
+import { answerDocsQuestion } from "./glean/docsChat.js";
+import { getEnablementSpotlightEvents } from "./glean/enablementEvents.js";
 
 dotenv.config();
 
@@ -242,6 +244,57 @@ app.get("/api/projects", async (req, res) => {
     res.json({ projects, regionId });
   } catch (err) {
     sendError(res, err);
+  }
+});
+
+app.get("/api/enablement-events", (_req, res) => {
+  res.json(getEnablementSpotlightEvents());
+});
+
+app.post("/api/docs-chat", async (req, res) => {
+  try {
+    const question = typeof req.body?.question === "string" ? req.body.question : "";
+    const history = Array.isArray(req.body?.history) ? req.body.history : [];
+    if (!question.trim()) {
+      return res.status(400).json({ error: "question is required" });
+    }
+
+    try {
+      await glean.ensureConnected();
+    } catch (err) {
+      if (err.code === "NEEDS_AUTH") {
+        return res.status(401).json({
+          error: "Loomi authentication required",
+          needsAuth: true,
+          authUrl: err.authUrl || glean.authProvider.pendingAuthUrl,
+          provider: "glean",
+        });
+      }
+      throw err;
+    }
+
+    const result = await answerDocsQuestion(glean, { question, history });
+    if (result.needsAuth) {
+      return res.status(401).json({
+        error: result.error,
+        needsAuth: true,
+        authUrl: result.authUrl,
+        provider: "glean",
+      });
+    }
+    if (!result.ok) {
+      return res.status(502).json({
+        error: result.error || "Docs chat failed",
+        answer: result.answer || "",
+        sources: result.sources || [],
+      });
+    }
+    res.json({
+      answer: result.answer,
+      sources: result.sources || [],
+    });
+  } catch (err) {
+    sendError(res, err, glean);
   }
 });
 
