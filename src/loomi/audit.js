@@ -2806,7 +2806,12 @@ async function loadLiveScenarios(loomi, project, toolErrors, { onProgress } = {}
     toolErrors
   );
   const all = unwrapList(listed, ["data"]);
-  const live = all.filter(isLiveScenario).slice(0, 25);
+  const live = all.filter(isLiveScenario).slice(0, 4);
+  onProgress?.({
+    step: "scenarios",
+    detail: `Analyzing up to ${live.length} live scenario(s)…`,
+    percent: 40,
+  });
 
   const rows = [];
   let index = 0;
