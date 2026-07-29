@@ -1709,7 +1709,7 @@ tbody tr:hover {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.65rem;
-  margin: 0 0 1.15rem;
+  margin: 0 0 0.85rem;
 }
 
 .pillar-tab {
@@ -1799,13 +1799,14 @@ tbody tr:hover {
 
 .pillar-subs {
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 0.85rem;
   flex: 1;
 }
 
 .pillar-sub {
+  width: 100%;
   background: #fff7cc;
   border-radius: 12px;
   padding: 0.9rem 0.95rem;
@@ -1957,10 +1958,6 @@ tbody tr:hover {
   .pillar-tabs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  .pillar-subs {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 860px) {
@@ -1986,7 +1983,6 @@ tbody tr:hover {
 
   .pillars-grid,
   .pillar-tabs,
-  .pillar-subs,
   .pillar-panel .usecase-grid {
     grid-template-columns: 1fr;
   }

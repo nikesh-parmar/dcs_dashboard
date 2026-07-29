@@ -1102,7 +1102,6 @@ export function buildAudit({
   weblayers = null,
   scenarioPerformance = null,
   eventVolumes = null,
-  eventFirstSeen = null,
   clientBrief = null,
   catalogsAvailable = true,
   propertySamples = null,
@@ -1111,7 +1110,6 @@ export function buildAudit({
   const overviewData = overview?.data ?? overview ?? {};
   const eventCounts = overviewData.event_types_overview ?? {};
   const volumes = eventVolumes || { d30: new Map(), ok: false };
-  const firstSeenMap = eventFirstSeen?.firstSeen || new Map();
   const events = unwrapList(eventSchema, ["events"]);
   const attributes = unwrapList(propertySchema, ["properties"]);
   const identifierRaw = unwrapList(identifierSchema, ["data", "ids", "identifiers", "fields"]);
@@ -1136,9 +1134,6 @@ export function buildAudit({
     const eventCount = countInfo?.event_count ?? null;
     const eventCount30 = volumeFor(volumes.d30, event.type);
     const recentZero = volumes.ok && (eventCount30 ?? 0) === 0;
-    const firstSeen = firstSeenMap.has(event.type)
-      ? firstSeenMap.get(event.type)
-      : null;
     return {
       type: event.type,
       name: event.name || event.type,
@@ -1149,7 +1144,6 @@ export function buildAudit({
       unusedPropertyCount: props.filter((p) => !p.used).length,
       eventCount,
       eventCount30,
-      firstSeen,
       realTimeAnalytics: Boolean(event.real_time_analytics),
       description: event.description || "",
       status: !event.used || eventCount === 0 || recentZero ? "inactive" : "active",
@@ -1252,9 +1246,6 @@ export function buildAudit({
     events30d: eventVolumes?.events30d ?? null,
     archivedEvents: overviewData.archived_events ?? null,
     userAccounts: overviewData.user_accounts ?? null,
-    oldestTimestamp: overviewData.oldest_timestamp
-      ? new Date(overviewData.oldest_timestamp * 1000).toISOString()
-      : null,
     eventTypeCount: eventRows.length,
     usedEventTypes: usedEvents,
     unusedEventTypes: unusedEvents,
@@ -1886,72 +1877,6 @@ async function loadEventVolumes(loomi, projectId, toolErrors, { onProgress } = {
   }
 
   return { d30, ok, events30d };
-}
-
-function parseEventTypeTimestampRows(eqlResult) {
-  const rows = eqlResult?.data?.rows || eqlResult?.rows || [];
-  const stamps = new Map();
-  for (const row of rows) {
-    const header = row?.headers?.[0];
-    if (!header || header.type === "other") continue;
-    const eventType = header?.value ?? header?.name ?? null;
-    if (!eventType) continue;
-    const raw = row?.values?.[0];
-    if (raw == null || raw === "") continue;
-    let ms = null;
-    if (typeof raw === "number" && Number.isFinite(raw)) {
-      // Engagement timestamps are usually unix seconds; treat large values as ms.
-      ms = raw > 1e12 ? raw : raw * 1000;
-    } else {
-      const asNum = Number(raw);
-      if (Number.isFinite(asNum)) {
-        ms = asNum > 1e12 ? asNum : asNum * 1000;
-      } else {
-        const parsed = Date.parse(String(raw));
-        if (!Number.isNaN(parsed)) ms = parsed;
-      }
-    }
-    if (ms == null || !Number.isFinite(ms)) continue;
-    stamps.set(String(eventType), new Date(ms).toISOString());
-  }
-  return stamps;
-}
-
-/**
- * Earliest occurrence timestamp per event type (lifetime, best-effort via EQL).
- * May fail on large projects when the lifetime query exceeds the EQL cost limit.
- */
-async function loadEventFirstSeen(loomi, projectId, toolErrors, { onProgress } = {}) {
-  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  await wait(3200);
-
-  onProgress?.({
-    step: "eventFirstSeen",
-    detail: "Finding first seen date per event type…",
-    percent: 16,
-  });
-
-  try {
-    const result = await loomi.callTool("execute_analytics_eql", {
-      project_id: projectId,
-      query: "select min any event timestamp by any event type",
-    });
-    if (result?.success === false || result?.error) {
-      toolErrors.push({
-        tool: "execute_analytics_eql",
-        error: String(result.error || "event first-seen query failed"),
-      });
-      return { firstSeen: new Map(), ok: false };
-    }
-    const firstSeen = parseEventTypeTimestampRows(result);
-    return { firstSeen, ok: firstSeen.size > 0 };
-  } catch (err) {
-    toolErrors.push({
-      tool: "execute_analytics_eql",
-      error: err.message || String(err),
-    });
-    return { firstSeen: new Map(), ok: false };
-  }
 }
 
 /** Quote EQL identifiers that are not plain ASCII words. */
@@ -3195,11 +3120,6 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     onProgress,
   });
 
-  progress("eventFirstSeen", "Finding first seen date per event type…", 16);
-  const eventFirstSeen = await loadEventFirstSeen(loomi, projectId, toolErrors, {
-    onProgress,
-  });
-
   progress("properties", "Loading customer properties…", 18);
   const propertySchema = await loomi.callTool("get_customer_property_schema", {
     project_id: projectId,
@@ -3300,7 +3220,6 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     weblayers,
     scenarioPerformance,
     eventVolumes,
-    eventFirstSeen,
     clientBrief,
     propertySamples,
     toolErrors,

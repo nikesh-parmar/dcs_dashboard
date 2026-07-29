@@ -371,7 +371,7 @@ function buildAuditHtmlReport(data) {
   sections.push(`
     <h2>Events (top by 30d volume)</h2>
     ${reportTable(
-      ["Event", "Class", "Status", "Used", "Properties", "30d", "All time", "First seen"],
+      ["Event", "Class", "Status", "Used", "Properties", "30d", "All time"],
       events.map((row) => [
         `<code>${reportEscape(row.type)}</code>`,
         reportEscape(row.classification),
@@ -380,7 +380,6 @@ function buildAuditHtmlReport(data) {
         reportNum(row.propertyCount),
         reportNum(row.eventCount30),
         reportNum(row.eventCount),
-        reportEscape(reportDate(row.firstSeen)),
       ])
     )}
   `);

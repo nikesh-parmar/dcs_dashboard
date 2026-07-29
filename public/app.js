@@ -170,7 +170,6 @@ async function connect() {
 function hideResults() {
   if (els.resultsSection) els.resultsSection.classList.add("hidden");
   if (els.exportHtmlBtn) els.exportHtmlBtn.disabled = true;
-  if (els.clientBriefCard) els.clientBriefCard.classList.add("hidden");
 }
 
 function showResults() {

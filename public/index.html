@@ -75,6 +75,13 @@
     </div>
 
     <section id="resultsSection" class="pillars-results hidden">
+      <nav id="pillarTabs" class="pillar-tabs" role="tablist" aria-label="Four pillars of support">
+        <button type="button" class="pillar-tab active" role="tab" aria-selected="true" data-pillar="onboarding">Onboarding &amp; Adoption</button>
+        <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="performance">Performance &amp; Analysis</button>
+        <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="recommendations">Recommendations &amp; Optimization</button>
+        <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="success">Success &amp; Support</button>
+      </nav>
+
       <div class="pillars-results-toolbar">
         <div>
           <p class="muted" id="projectMeta"></p>
@@ -84,29 +91,7 @@
         </button>
       </div>
 
-      <div id="clientBriefCard" class="client-brief hidden">
-        <div class="client-brief-head">
-          <div>
-            <p class="client-brief-eyebrow">Client context · Glean</p>
-            <h2 id="clientBriefTitle">Client</h2>
-          </div>
-          <span id="clientBriefVertical" class="client-brief-vertical hidden"></span>
-        </div>
-        <p id="clientBriefOverview" class="client-brief-copy"></p>
-        <div id="verticalAssessment" class="vertical-assessment hidden"></div>
-        <div id="clientBriefBody" class="client-brief-body hidden"></div>
-        <p id="clientBriefSources" class="muted client-brief-sources"></p>
-        <div id="clientBriefAuth" class="client-brief-auth hidden">
-          <p class="muted">Glean is not connected. Use <strong>Connect</strong> in the header to authorize Loomi Connect and Glean.</p>
-        </div>
-      </div>
-
-      <nav id="pillarTabs" class="pillar-tabs" role="tablist" aria-label="Four pillars of support">
-        <button type="button" class="pillar-tab active" role="tab" aria-selected="true" data-pillar="onboarding">Onboarding &amp; Adoption</button>
-        <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="performance">Performance &amp; Analysis</button>
-        <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="recommendations">Recommendations &amp; Optimization</button>
-        <button type="button" class="pillar-tab" role="tab" aria-selected="false" data-pillar="success">Success &amp; Support</button>
-      </nav>
+      <div id="verticalAssessment" class="vertical-assessment hidden"></div>
 
       <div class="pillar-panels">
         <!-- 1. Onboarding & Adoption -->
