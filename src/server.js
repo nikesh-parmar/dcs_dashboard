@@ -92,7 +92,7 @@ async function connectAllMcps() {
         provider: "glean",
         glean: glean.getStatus(),
         allMcpsConnected: false,
-        message: "Authorize Glean, then return here.",
+        message: "Authorize Loomi, then return here.",
       };
     }
   }
@@ -103,7 +103,7 @@ async function connectAllMcps() {
     allMcpsConnected: true,
     provider: null,
     glean: glean.getStatus(),
-    message: "Connected to Loomi Connect and Glean.",
+    message: "Connected to Loomi.",
   };
 }
 
@@ -174,9 +174,9 @@ app.get("/oauth/callback", async (req, res) => {
           continued.message ||
           (needsMoreAuth
             ? continued.provider === "glean"
-              ? "Loomi connected. Continuing with Glean…"
+              ? "Loomi connected. Continuing authorization…"
               : "Continuing authorization…"
-            : "Connected to Loomi Connect and Glean."),
+            : "Connected to Loomi."),
       })
     );
   } catch (err) {
@@ -205,8 +205,8 @@ app.get("/oauth/glean/callback", async (req, res) => {
         message:
           continued.message ||
           (needsMoreAuth
-            ? "Glean connected. Continuing remaining MCP login…"
-            : "Connected to Loomi Connect and Glean."),
+            ? "Loomi connected. Continuing remaining login…"
+            : "Connected to Loomi."),
       })
     );
   } catch (err) {
@@ -257,7 +257,7 @@ app.get("/api/client-brief", async (req, res) => {
     } catch (err) {
       if (err.code === "NEEDS_AUTH") {
         return res.status(401).json({
-          error: "Glean authentication required",
+          error: "Loomi authentication required",
           needsAuth: true,
           authUrl: err.authUrl || glean.authProvider.pendingAuthUrl,
           provider: "glean",

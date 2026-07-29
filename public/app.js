@@ -22,7 +22,6 @@ const els = {
   channelAdoptionSummary: document.getElementById("channelAdoptionSummary"),
   channelAdoptionNote: document.getElementById("channelAdoptionNote"),
   pillarTabs: document.getElementById("pillarTabs"),
-  exportHtmlBtn: document.getElementById("exportHtmlBtn"),
   clientBriefCard: document.getElementById("clientBriefCard"),
   clientBriefTitle: document.getElementById("clientBriefTitle"),
   clientBriefVertical: document.getElementById("clientBriefVertical"),
@@ -87,12 +86,17 @@ function setConnected(connected, status = null) {
     loomiLabel = "Loomi ✓";
   }
 
-  const gleanLabel = gleanReady ? "Glean ✓" : "Glean —";
-  els.badge.textContent = `${loomiLabel} · ${gleanLabel}`;
+  if (allMcps) {
+    els.badge.textContent = loomiLabel === "Loomi —" ? "Loomi ✓" : loomiLabel;
+  } else if (loomiReady || gleanReady || connected) {
+    els.badge.textContent = "Loomi · Finish connect";
+  } else {
+    els.badge.textContent = "Loomi —";
+  }
   els.badge.className = `badge ${allMcps ? "ok" : "warn"}`;
   els.badge.title = allMcps
-    ? "Loomi Connect and Glean connected"
-    : "Click Connect to authorize remaining MCPs";
+    ? "Loomi connected"
+    : "Click Connect to authorize remaining access";
 
   const anyConnected = Boolean(connected || gleanReady);
   if (allMcps) {
@@ -120,28 +124,28 @@ async function refreshStatus() {
   }
   if (status.allMcpsConnected) {
     // leave existing status unless empty
-    if (!els.status.textContent) setStatus("Connected to Loomi Connect and Glean.");
+    if (!els.status.textContent) setStatus("Connected to Loomi.");
   } else if (status.connected) {
     if (!status.allConnected && status.regionCount > 1) {
       setStatus(
-        `Loomi ${status.connectedCount}/${status.regionCount} regions connected. Click Finish connect to continue (Loomi + Glean).`
+        `Loomi ${status.connectedCount}/${status.regionCount} regions connected. Click Finish connect to continue.`
       );
     } else if (!status.glean?.connected) {
-      setStatus("Loomi connected. Click Finish connect to authorize Glean.");
+      setStatus("Loomi connected. Click Finish connect to authorize remaining access.");
     }
   } else if (status.hasTokens || status.glean?.hasTokens) {
-    setStatus("Saved session found. Click Connect to resume Loomi Connect and Glean.");
+    setStatus("Saved session found. Click Connect to resume Loomi.");
   }
   return status;
 }
 
 async function connect() {
-  setStatus("Connecting Loomi Connect & Glean…");
+  setStatus("Connecting Loomi…");
   els.connectBtn.disabled = true;
   try {
     const result = await api("/api/connect", { method: "POST" });
     if (result.needsAuth && result.authUrl) {
-      const who = result.provider === "glean" ? "Glean" : "Loomi Connect";
+      const who = result.provider === "glean" ? "Loomi" : "Loomi Connect";
       setStatus(result.message || `Authorize ${who} in the opened window, then return here.`);
       lastOpenedAuthUrl = result.authUrl;
       window.open(result.authUrl, "_blank", "noopener,noreferrer");
@@ -150,7 +154,7 @@ async function connect() {
     }
     const status = await api("/api/status");
     setConnected(status.connected, status);
-    setStatus(result.message || "Connected to Loomi Connect and Glean.");
+    setStatus(result.message || "Connected to Loomi.");
     if (status.connected) await loadOrganizations();
   } catch (err) {
     if (err.needsAuth && err.authUrl) {
@@ -168,13 +172,11 @@ async function connect() {
 
 function hideResults() {
   if (els.resultsSection) els.resultsSection.classList.add("hidden");
-  if (els.exportHtmlBtn) els.exportHtmlBtn.disabled = true;
 }
 
 function showResults() {
   if (!els.resultsSection) return;
   els.resultsSection.classList.remove("hidden");
-  if (els.exportHtmlBtn) els.exportHtmlBtn.disabled = false;
   selectPillarTab("onboarding");
 }
 
@@ -193,7 +195,7 @@ async function disconnect() {
   await api("/api/disconnect", { method: "POST" });
   setConnected(false);
   hideResults();
-  setStatus("Disconnected from Loomi Connect and Glean.");
+  setStatus("Disconnected from Loomi.");
 }
 
 let authPollTimer = null;
@@ -214,7 +216,7 @@ function pollUntilConnected() {
         clearInterval(authPollTimer);
         authPollTimer = null;
         lastOpenedAuthUrl = null;
-        setStatus("Connected to Loomi Connect and Glean.");
+        setStatus("Connected to Loomi.");
         if (status.connected) await loadOrganizations();
         return;
       }
@@ -228,11 +230,11 @@ function pollUntilConnected() {
         (status.connected || status.glean?.connected)
       ) {
         lastOpenedAuthUrl = nextAuthUrl;
-        const who = status.allConnected ? "Glean" : "Loomi Connect";
+        const who = status.allConnected ? "Loomi" : "Loomi Connect";
         setStatus(`Authorize ${who} in the opened window, then return here.`);
         window.open(nextAuthUrl, "_blank", "noopener,noreferrer");
       } else if (status.connected && !status.glean?.connected) {
-        setStatus("Loomi connected — waiting for Glean authorization…");
+        setStatus("Loomi connected — waiting for Loomi authorization…");
       } else if (status.connected && !status.allConnected) {
         setStatus(
           `Loomi ${status.connectedCount}/${status.regionCount} regions — finish the next login window…`
@@ -436,7 +438,7 @@ function renderClientBrief(data) {
         els.clientBriefOverview.classList.remove("hidden");
       } else if (gleanConnected && !hasStructured) {
         els.clientBriefOverview.textContent =
-          "Glean is connected but no documents with this client name in the title were found.";
+          "Loomi is connected but no documents with this client name in the title were found.";
         els.clientBriefOverview.classList.remove("hidden");
       } else {
         els.clientBriefOverview.innerHTML = "";
@@ -496,7 +498,7 @@ function renderClientBrief(data) {
       if (gaps.length) {
         blocks.push(`
           <section class="client-brief-section">
-            <h3>Not confirmed in Glean</h3>
+            <h3>Not confirmed in Loomi</h3>
             <ul>${gaps.map((item) => `<li>${linkifyText(item)}</li>`).join("")}</ul>
           </section>`);
       }
@@ -526,7 +528,7 @@ function renderClientBrief(data) {
             )
             .join(" · ")}`
         : gleanConnected
-          ? `<span class="muted">Sourced via Glean</span>`
+          ? `<span class="muted">Sourced via Loomi</span>`
           : "";
     }
     return;
@@ -549,7 +551,7 @@ function renderClientBrief(data) {
     const copy = els.clientBriefAuth.querySelector("p");
     if (copy) {
       copy.innerHTML =
-        "Glean is not connected. Use <strong>Connect</strong> in the header to authorize Loomi Connect and Glean.";
+        "Loomi is not connected. Use <strong>Connect</strong> in the header to authorize Loomi.";
     }
   }
 }
@@ -576,13 +578,13 @@ async function refreshClientBrief() {
     auditData.clientBrief = data.clientBrief;
     auditData.glean = data.glean || { connected: true };
     renderClientBrief(auditData);
-    setStatus("Client overview updated from Glean.");
+    setStatus("Client overview updated from Loomi.");
   } catch (err) {
     if (err.needsAuth && err.authUrl) {
       auditData.glean = { needsAuth: true, authUrl: err.authUrl, connected: false };
       renderClientBrief(auditData);
       window.open(err.authUrl, "_blank", "noopener,noreferrer");
-      setStatus("Authorize Glean, then click Connect Glean again.");
+      setStatus("Authorize Loomi, then click Connect again.");
       return;
     }
     setStatus(err.message || String(err), true);
@@ -685,7 +687,7 @@ function renderNextBestActions(ai, adoptionOpportunities = []) {
   if (ai?.available) {
     for (const item of ai.adoption || []) {
       gleanItems.push({
-        source: "Glean",
+        source: "Loomi",
         title: item.title || item.basedOn || "Scenario recommendation",
         basedOn: item.basedOn,
         narrative: item.narrative,
@@ -697,7 +699,7 @@ function renderNextBestActions(ai, adoptionOpportunities = []) {
       const hay = `${item.area || ""} ${item.title || ""} ${item.detail || ""}`;
       if (/scenario|journey|automation|use case|campaign|abandon|welcome|win.?back|reactivat/i.test(hay)) {
         gleanItems.push({
-          source: "Glean",
+          source: "Loomi",
           title: item.title || "Scenario recommendation",
           basedOn: item.area,
           narrative: item.detail || item.rationale,
@@ -735,8 +737,8 @@ function renderNextBestActions(ai, adoptionOpportunities = []) {
     root.innerHTML = `<p class="muted ai-insights-empty">${escapeHtml(
       ai?.error ||
         (ai?.needsAuth
-          ? "Glean authentication required — use Connect in the header."
-          : "No high-value scenario recommendations yet. Connect Glean and reload the dashboard.")
+          ? "Loomi authentication required — use Connect in the header."
+          : "No high-value scenario recommendations yet. Connect Loomi and reload the dashboard.")
     )}</p>`;
     return;
   }
@@ -785,7 +787,7 @@ function renderSuccessPlanning(data) {
     );
   }
   if (!parts.length) {
-    root.innerHTML = `<p class="muted">No success-planning context yet. Connect Glean and re-run the audit for a client brief.</p>`;
+    root.innerHTML = `<p class="muted">No success-planning context yet. Connect Loomi and reload the dashboard for a client brief.</p>`;
     return;
   }
   root.innerHTML = parts.join("");
@@ -864,14 +866,14 @@ function renderAiInsights(ai) {
 
   const emptyMsg = (reason) =>
     `<p class="muted ai-insights-empty">${escapeHtml(
-      reason || "Connect Glean via Connect in the header to generate AI recommendations."
+      reason || "Connect Loomi via Connect in the header to generate AI recommendations."
     )}</p>`;
 
   if (!ai || !ai.available) {
     const reason =
       ai?.error ||
       (ai?.needsAuth
-        ? "Glean authentication required — use Connect in the header."
+        ? "Loomi authentication required — use Connect in the header."
         : null);
     if (findingsEl) findingsEl.innerHTML = emptyMsg(reason);
     if (adoptionEl) adoptionEl.innerHTML = emptyMsg(reason);
@@ -909,7 +911,7 @@ function renderAiInsights(ai) {
           .map(
             (item) => `
         <article class="ai-insight-card">
-          <span class="ai-insight-badge">Glean</span>
+          <span class="ai-insight-badge">Loomi</span>
           <div>
             <h3>${escapeHtml(item.title || item.basedOn || "Recommendation")}</h3>
             ${
@@ -958,7 +960,7 @@ function renderAiInsights(ai) {
           .map(
             (item) => `
         <article class="ai-insight-card">
-          <span class="ai-insight-badge">Glean</span>
+          <span class="ai-insight-badge">Loomi</span>
           <div>
             <h3>${escapeHtml(item.title || item.basedOn || "Adoption advice")}</h3>
             ${
@@ -2014,18 +2016,6 @@ els.projectSelect.addEventListener("change", () => {
 
 els.auditBtn.addEventListener("click", runAudit);
 
-els.exportHtmlBtn?.addEventListener("click", () => {
-  if (!auditData) {
-    setStatus("Show the project dashboard before exporting.", true);
-    return;
-  }
-  try {
-    const filename = downloadAuditHtmlReport(auditData);
-    setStatus(`Downloaded ${filename}. Upload it to Google Drive and open with Google Docs.`);
-  } catch (err) {
-    setStatus(err.message || String(err), true);
-  }
-});
 
 refreshStatus().catch((err) => setStatus(err.message, true));
 
