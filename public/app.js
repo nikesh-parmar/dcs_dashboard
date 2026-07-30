@@ -17,6 +17,7 @@ const els = {
   dataQualitySummary: document.getElementById("dataQualitySummary"),
   dataQualityList: document.getElementById("dataQualityList"),
   successPlanningBody: document.getElementById("successPlanningBody"),
+  successPlanningIntro: document.getElementById("successPlanningIntro"),
   serviceRecEmpty: document.getElementById("serviceRecEmpty"),
   hubHome: document.getElementById("hubHome"),
   hubAvatar: document.getElementById("hubAvatar"),
@@ -1225,30 +1226,168 @@ function renderNextBestActions(ai, adoptionOpportunities = []) {
     .join("");
 }
 
+function getSuccessPlanningHighlights(data = {}) {
+  const personalization = data.personalization?.features || {};
+  const hasContextual = Boolean(personalization.contextualPersonalization?.used);
+  const topNba = (data.aiInsights?.adoption || data.adoptionOpportunities || [])[0];
+
+  return [
+    {
+      id: "contextual-personalisation",
+      title: "Contextual Personalisation",
+      pillar: "Pillar 3: Personalise at Scale",
+      callout: "Automatically select the best content variant per customer per moment",
+      summary:
+        "Combine customer data, AI predictions, and real-time behaviour to deliver unique experiences across every channel.",
+      tactics: [
+        {
+          title: "Contextual Personalisation",
+          detail: hasContextual
+            ? "Already detected in this project — expand it to high-volume always-on journeys."
+            : "AI picks the best content variant per customer automatically.",
+        },
+        {
+          title: "RFM Segmentation",
+          detail: "Identify Champions, At Risk, and Hibernating customers for tailored treatment.",
+        },
+        {
+          title: "Optimal Send Time",
+          detail: "Deliver at each customer's peak engagement hour.",
+        },
+        {
+          title: "Category-affinity recommendations",
+          detail: "Surface affinity-led recs on homepage and in emails.",
+        },
+      ],
+      docs: [
+        {
+          title: "Contextual personalization",
+          url: "https://documentation.bloomreach.com/engagement/docs/contextual-personalization",
+        },
+        {
+          title: "RFM segmentation",
+          url: "https://documentation.bloomreach.com/engagement/docs/rfm-segmentation",
+        },
+      ],
+    },
+    {
+      id: "journey-orchestration",
+      title: "Journey Orchestration",
+      pillar: "Pillar 2: Activate & Optimise",
+      callout: "Turn audit gaps into measurable always-on journeys with clear owners and KPIs",
+      summary:
+        "Prioritise the highest-value scenario opportunities, instrument success metrics, then scale what works across channels.",
+      tactics: [
+        {
+          title: "Next best journey",
+          detail: topNba?.title
+            ? `Start with: ${topNba.title}`
+            : "Pick one abandon, welcome, or win-back journey as the first success bet.",
+        },
+        {
+          title: "Channel mix",
+          detail: "Pair email with SMS or push for high-intent customers who do not engage first touch.",
+        },
+        {
+          title: "Experimentation",
+          detail: "Replace static A/B with contextual variants once traffic volume is stable.",
+        },
+        {
+          title: "Success metrics",
+          detail: "Agree open/click/conversion baselines and a 30-day review cadence before scaling.",
+        },
+      ],
+      docs: [
+        {
+          title: "Use Case Center",
+          url: "https://documentation.bloomreach.com/engagement/docs/about-use-case-center",
+        },
+        {
+          title: "Scenarios",
+          url: "https://documentation.bloomreach.com/engagement/docs/scenarios",
+        },
+      ],
+    },
+  ];
+}
+
 function renderSuccessPlanning(data) {
   const root = els.successPlanningBody;
   if (!root) return;
+
   const brief = data.clientBrief || {};
   const vertical = data.verticalAssessment || {};
   const overview = brief.overview || data.overview || {};
-  const parts = [];
+  const introParts = [];
 
   if (brief.overview || brief.summary) {
-    parts.push(`<p>${escapeHtml(brief.overview || brief.summary)}</p>`);
+    introParts.push(`<p>${escapeHtml(brief.overview || brief.summary)}</p>`);
   }
-  if (vertical.summary || vertical.headline) {
-    parts.push(`<p><strong>Vertical focus:</strong> ${escapeHtml(vertical.summary || vertical.headline)}</p>`);
-  }
-  if (overview.totalCustomers != null || overview.totalEvents != null) {
-    parts.push(
-      `<p class="muted">${formatNumber(overview.totalCustomers)} customers · ${formatNumber(overview.totalEvents)} events</p>`
+  if (vertical.summary || vertical.headline || vertical.vertical?.label) {
+    introParts.push(
+      `<p><strong>Vertical focus:</strong> ${escapeHtml(
+        vertical.summary || vertical.headline || vertical.vertical?.label
+      )}</p>`
     );
   }
-  if (!parts.length) {
-    root.innerHTML = `<p class="muted">No success-planning context yet. Connect Loomi and reload the dashboard for a client brief.</p>`;
-    return;
+  if (overview.totalCustomers != null || overview.totalEvents != null) {
+    introParts.push(
+      `<p class="muted">${formatNumber(overview.totalCustomers)} customers · ${formatNumber(
+        overview.totalEvents
+      )} events</p>`
+    );
   }
-  root.innerHTML = parts.join("");
+
+  if (els.successPlanningIntro) {
+    els.successPlanningIntro.innerHTML = introParts.length
+      ? introParts.join("")
+      : `<p class="muted">Recommended success-planning highlights for this Engagement project.</p>`;
+    els.successPlanningIntro.classList.toggle("muted", !introParts.length);
+  }
+
+  const highlights = getSuccessPlanningHighlights(data);
+  root.innerHTML = highlights
+    .map(
+      (section) => `
+    <article class="success-highlight-card" data-highlight="${escapeHtml(section.id)}">
+      <div class="success-highlight-copy">
+        <span class="success-highlight-pill">${escapeHtml(section.pillar)}</span>
+        <h4>${escapeHtml(section.title)}</h4>
+        <p class="success-highlight-callout">${escapeHtml(section.callout)}</p>
+        <p>${escapeHtml(section.summary)}</p>
+        <div class="success-highlight-tactics">
+          <h5>Tactics</h5>
+          <ul>
+            ${section.tactics
+              .map(
+                (tactic) => `
+              <li>
+                <strong>${escapeHtml(tactic.title)}</strong>
+                <span>${escapeHtml(tactic.detail)}</span>
+              </li>`
+              )
+              .join("")}
+          </ul>
+        </div>
+        <div class="success-highlight-docs">
+          <h5>Help docs</h5>
+          <ul>
+            ${section.docs
+              .map(
+                (doc) => `
+              <li>
+                <a href="${escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+                  doc.title
+                )}</a>
+              </li>`
+              )
+              .join("")}
+          </ul>
+        </div>
+      </div>
+    </article>`
+    )
+    .join("");
 }
 
 function renderFindings(findings) {
