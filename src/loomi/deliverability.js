@@ -178,6 +178,150 @@ function rangeLabel(windowDays, endMs = Date.now()) {
   return `${fmt(start)} – ${fmt(end)}`;
 }
 
+/** Temporary demo mode until live Loomi deliverability is enabled in demos. */
+const USE_DEMO_DELIVERABILITY = true;
+
+function demoSeed(windowDays) {
+  // Stable-ish profiles per window so 7/14/30 look distinct but healthy.
+  if (windowDays === 7) {
+    return {
+      dailyDelivered: 82000,
+      deliveryRate: 0.994,
+      hardBounceRate: 0.002,
+      softBounceRate: 0.003,
+      complaintRate: 0.00015,
+      openRate: 0.43,
+      clickThroughRate: 0.034,
+      prior: {
+        deliveryRate: 0.991,
+        hardBounceRate: 0.0025,
+        softBounceRate: 0.0035,
+        complaintRate: 0.0002,
+        openRate: 0.41,
+        clickThroughRate: 0.031,
+      },
+    };
+  }
+  if (windowDays === 14) {
+    return {
+      dailyDelivered: 76000,
+      deliveryRate: 0.993,
+      hardBounceRate: 0.0025,
+      softBounceRate: 0.0035,
+      complaintRate: 0.00018,
+      openRate: 0.42,
+      clickThroughRate: 0.032,
+      prior: {
+        deliveryRate: 0.989,
+        hardBounceRate: 0.003,
+        softBounceRate: 0.004,
+        complaintRate: 0.00022,
+        openRate: 0.405,
+        clickThroughRate: 0.029,
+      },
+    };
+  }
+  return {
+    dailyDelivered: 72000,
+    deliveryRate: 0.992,
+    hardBounceRate: 0.003,
+    softBounceRate: 0.004,
+    complaintRate: 0.0002,
+    openRate: 0.41,
+    clickThroughRate: 0.031,
+    prior: {
+      deliveryRate: 0.986,
+      hardBounceRate: 0.004,
+      softBounceRate: 0.005,
+      complaintRate: 0.0003,
+      openRate: 0.387,
+      clickThroughRate: 0.027,
+    },
+  };
+}
+
+function buildDemoSeries(windowDays, seed) {
+  const series = [];
+  const end = new Date();
+  end.setHours(12, 0, 0, 0);
+  for (let i = windowDays - 1; i >= 0; i -= 1) {
+    const day = new Date(end);
+    day.setDate(end.getDate() - i);
+    // Gentle weekly seasonality + small noise for a realistic chart.
+    const wave = Math.sin((i / windowDays) * Math.PI * 2) * 0.12;
+    const weekend = [0, 6].includes(day.getDay()) ? -0.18 : 0;
+    const delivered = Math.round(seed.dailyDelivered * (1 + wave + weekend));
+    const hardBounces = Math.max(1, Math.round(delivered * seed.hardBounceRate));
+    const softBounces = Math.max(1, Math.round(delivered * seed.softBounceRate));
+    const complaints = Math.max(0, Math.round(delivered * seed.complaintRate));
+    const volumeBase = delivered + hardBounces + softBounces;
+    series.push({
+      date: day.toISOString().slice(0, 10),
+      delivered,
+      hardBounces,
+      softBounces,
+      complaints,
+      hardBounceRate: rate(hardBounces, volumeBase),
+      softBounceRate: rate(softBounces, volumeBase),
+      complaintRate: rate(complaints, volumeBase),
+    });
+  }
+  return series;
+}
+
+function buildDemoMetrics(windowDays, rates, scale) {
+  const sends = Math.round(scale);
+  const delivered = Math.round(sends * rates.deliveryRate);
+  const hardBounces = Math.round(sends * rates.hardBounceRate);
+  const softBounces = Math.round(sends * rates.softBounceRate);
+  const complaints = Math.round(sends * rates.complaintRate);
+  const opens = Math.round(delivered * rates.openRate);
+  const clicks = Math.round(delivered * rates.clickThroughRate);
+  return finalizeMetrics(
+    {
+      sends,
+      delivered,
+      hardBounces,
+      softBounces,
+      complaints,
+      opens,
+      clicks,
+    },
+    windowDays
+  );
+}
+
+export function buildDemoDeliverability(windowDays = 30) {
+  const days = [7, 14, 30].includes(Number(windowDays)) ? Number(windowDays) : 30;
+  const seed = demoSeed(days);
+  const series = buildDemoSeries(days, seed);
+  const scale = series.reduce((sum, row) => sum + row.delivered, 0) / seed.deliveryRate;
+  const current = buildDemoMetrics(days, seed, scale);
+  const previous = buildDemoMetrics(days, seed.prior, scale * 0.94);
+
+  return {
+    ok: true,
+    demo: true,
+    windowDays: days,
+    rangeLabel: rangeLabel(days),
+    previousRangeLabel: rangeLabel(days, Date.now() - days * 86400000),
+    current,
+    previous,
+    deltas: {
+      deliveryRatePp: deltaPp(current.deliveryRate, previous.deliveryRate),
+      hardBounceRatePp: deltaPp(current.hardBounceRate, previous.hardBounceRate),
+      softBounceRatePp: deltaPp(current.softBounceRate, previous.softBounceRate),
+      complaintRatePp: deltaPp(current.complaintRate, previous.complaintRate),
+      openRatePp: deltaPp(current.openRate, previous.openRate),
+      clickThroughRatePp: deltaPp(current.clickThroughRate, previous.clickThroughRate),
+    },
+    series,
+    note: "Demo data for presentation — live Loomi metrics can replace this later.",
+    source: "demo",
+    queriedAt: new Date().toISOString(),
+  };
+}
+
 /**
  * @param {import('./client.js').LoomiClient} loomi
  * @param {string} projectId
@@ -191,6 +335,17 @@ export async function loadDeliverabilityMetrics(
   { windowDays = 30, onProgress } = {}
 ) {
   const days = [7, 14, 30].includes(Number(windowDays)) ? Number(windowDays) : 30;
+
+  // Demo-first for now so the dashboard always looks presentation-ready.
+  if (USE_DEMO_DELIVERABILITY) {
+    onProgress?.({
+      step: "deliverability",
+      detail: `Loading demo deliverability metrics (last ${days} days)…`,
+      percent: 62,
+    });
+    return buildDemoDeliverability(days);
+  }
+
   onProgress?.({
     step: "deliverability",
     detail: `Loading email deliverability metrics (last ${days} days)…`,

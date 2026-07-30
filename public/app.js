@@ -1822,7 +1822,9 @@ function renderDeliverability(deliverability) {
   }
   if (els.deliverabilityChartNote) {
     els.deliverabilityChartNote.textContent = Array.isArray(d.series) && d.series.length
-      ? "Daily"
+      ? d.demo
+        ? "Daily · Demo"
+        : "Daily"
       : "Trend unavailable";
   }
 
