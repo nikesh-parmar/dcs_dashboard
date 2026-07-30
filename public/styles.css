@@ -592,6 +592,137 @@ a:hover {
   text-decoration: none;
 }
 
+.hub-community {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.hub-community-title {
+  margin: 0.15rem 0 0;
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--br-ink);
+}
+
+.hub-community-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.hub-community-card {
+  position: relative;
+  margin-top: 0.55rem;
+  padding: 1.15rem 0.9rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid #e2e2e0;
+  border-top-width: 3px;
+  background: #f3f3f1;
+}
+
+.hub-community-slack {
+  border-top-color: var(--br-yellow);
+}
+
+.hub-community-deeto {
+  border-top-color: #7eb8e8;
+}
+
+.hub-community-icon {
+  position: absolute;
+  top: -0.55rem;
+  left: 0.75rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e8e8e6;
+  box-shadow: 0 2px 6px rgba(17, 17, 17, 0.06);
+}
+
+.hub-community-icon-deeto {
+  background: var(--br-yellow);
+  border-color: transparent;
+  color: var(--br-black);
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: lowercase;
+}
+
+.hub-community-card h3 {
+  margin: 0.35rem 0 0.55rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--br-ink);
+}
+
+.hub-community-card ul {
+  margin: 0 0 0.85rem;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.hub-community-card li {
+  position: relative;
+  padding-left: 1.05rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: #333;
+}
+
+.hub-community-card li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.35rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 2px;
+}
+
+.hub-community-slack li::before {
+  background: var(--br-yellow);
+}
+
+.hub-community-deeto li::before {
+  background: #7eb8e8;
+}
+
+.hub-community-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: var(--br-black) !important;
+}
+
+.hub-community-cta-slack {
+  background: var(--br-yellow);
+}
+
+.hub-community-cta-deeto {
+  background: #a8d4f5;
+}
+
+.hub-community-cta:hover {
+  filter: brightness(0.96);
+}
+
 .loomi-assistant {
   position: fixed;
   right: 1.15rem;
