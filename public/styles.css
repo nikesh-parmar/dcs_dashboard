@@ -2571,6 +2571,107 @@ tbody tr:hover {
   font-size: 0.8rem;
 }
 
+.support-contacts-block {
+  display: grid;
+  gap: 0.65rem;
+  margin-bottom: 0.35rem;
+}
+
+.support-contacts-head h4 {
+  margin: 0 0 0.25rem;
+  font-family: var(--display);
+  font-size: 1.15rem;
+}
+
+.support-contacts-wrap {
+  max-height: none;
+  overflow: auto;
+  border: 1px solid var(--br-line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.support-contacts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.support-contacts-table th,
+.support-contacts-table td {
+  padding: 0.85rem 0.9rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--br-line);
+}
+
+.support-contacts-table th {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--br-muted);
+  background: #fafafa;
+}
+
+.support-contacts-table tr:last-child td {
+  border-bottom: none;
+}
+
+.support-enquiry {
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.support-enquiry-detail {
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.support-person {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.support-avatar {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #e8f0fe;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.support-avatar-brand {
+  background: var(--br-yellow);
+  color: var(--br-black);
+  font-family: var(--display);
+  font-size: 0.95rem;
+}
+
+.support-person-name {
+  font-weight: 700;
+}
+
+.support-person-role {
+  font-size: 0.76rem;
+}
+
+.support-contacts-footer {
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  background: #fff8d6;
+  border: 1px solid #f0e0a0;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #5a4a00;
+}
+
 .enablement-links,
 .practice-list {
   margin: 0;

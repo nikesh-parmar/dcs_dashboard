@@ -3368,11 +3368,17 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
   }
 
   progress("done", "Audit complete", 100);
+  const { getDemoAccountContacts } = await import("../support/accountContacts.js");
+  const accountContacts = getDemoAccountContacts({
+    name: project.name,
+    workspace: project.workspace_name,
+  });
   return {
     ...audit,
     verticalAssessment,
     aiInsights,
     academyCourses,
+    accountContacts,
     glean: gleanMeta,
   };
 }
