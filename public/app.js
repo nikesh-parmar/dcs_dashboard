@@ -33,6 +33,7 @@ const els = {
   hubChatForm: document.getElementById("hubChatForm"),
   hubChatInput: document.getElementById("hubChatInput"),
   hubChatSend: document.getElementById("hubChatSend"),
+  loomiAssistant: document.getElementById("loomiAssistant"),
   loomiAssistantPanel: document.getElementById("loomiAssistantPanel"),
   loomiAssistantToggle: document.getElementById("loomiAssistantToggle"),
   loomiAssistantClose: document.getElementById("loomiAssistantClose"),
@@ -201,12 +202,14 @@ function hideResults() {
   if (els.resultsSection) els.resultsSection.classList.add("hidden");
   if (els.hubHome) els.hubHome.classList.add("hidden");
   if (els.hubPillarNav) els.hubPillarNav.classList.add("hidden");
+  setLoomiAssistantVisible(false);
 }
 
 function showHubHome() {
   if (els.hubHome) els.hubHome.classList.remove("hidden");
   if (els.hubPillarNav) els.hubPillarNav.classList.remove("hidden");
   if (els.resultsSection) els.resultsSection.classList.add("hidden");
+  if (auditData) setLoomiAssistantVisible(true);
   loadEnablementSpotlight().catch(() => {});
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -216,6 +219,7 @@ function showPillars(pillar = "onboarding") {
   if (els.hubPillarNav) els.hubPillarNav.classList.remove("hidden");
   if (!els.resultsSection) return;
   els.resultsSection.classList.remove("hidden");
+  if (auditData) setLoomiAssistantVisible(true);
   selectPillarTab(pillar);
   window.scrollTo({ top: els.resultsSection.offsetTop - 72, behavior: "smooth" });
 }
@@ -754,10 +758,18 @@ async function loadEnablementSpotlight() {
 /** @type {Array<{ role: string, content: string }>} */
 let docsChatHistory = [];
 
+function setLoomiAssistantVisible(visible) {
+  const root = els.loomiAssistant;
+  if (!root) return;
+  root.classList.toggle("hidden", !visible);
+  if (!visible) setLoomiAssistantOpen(false);
+}
+
 function setLoomiAssistantOpen(open) {
   const panel = els.loomiAssistantPanel;
   const toggle = els.loomiAssistantToggle;
   if (!panel || !toggle) return;
+  if (open && els.loomiAssistant?.classList.contains("hidden")) return;
   panel.classList.toggle("hidden", !open);
   panel.setAttribute("aria-hidden", open ? "false" : "true");
   toggle.setAttribute("aria-expanded", open ? "true" : "false");
