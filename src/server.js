@@ -6,6 +6,7 @@ import { loadConfig } from "./config.js";
 import { MultiRegionLoomi, parseMcpEndpoints } from "./loomi/multiClient.js";
 import { runProjectAudit } from "./loomi/audit.js";
 import { loadDeliverabilityMetrics } from "./loomi/deliverability.js";
+import { getDemoAccountContacts } from "./support/accountContacts.js";
 import { createGleanClient, fetchClientBrief } from "./glean/clientBrief.js";
 import { resolveUserIdentity } from "./loomi/userIdentity.js";
 import { answerDocsQuestion } from "./glean/docsChat.js";
@@ -246,6 +247,21 @@ app.get("/api/projects", async (req, res) => {
   } catch (err) {
     sendError(res, err);
   }
+});
+
+app.get("/api/account-contacts", (req, res) => {
+  const projectId = typeof req.query.projectId === "string" ? req.query.projectId : "";
+  const project = projectCache.get(projectId) || {
+    id: projectId,
+    name: typeof req.query.name === "string" ? req.query.name : "this account",
+    workspace_name: typeof req.query.workspace === "string" ? req.query.workspace : "",
+  };
+  res.json({
+    accountContacts: getDemoAccountContacts({
+      name: project.name,
+      workspace: project.workspace_name,
+    }),
+  });
 });
 
 app.get("/api/enablement-events", (_req, res) => {
