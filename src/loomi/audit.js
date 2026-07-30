@@ -1178,7 +1178,7 @@ export function buildAudit({
   const engagementUrls = buildEngagementUrls(project.url);
   const catalogRows = (Array.isArray(catalogs) ? catalogs : unwrapList(catalogs, ["data"])).map((cat) => {
     // Prefer already-normalized rows from loadCatalogs
-    if (cat && cat.usageSummary != null) {
+    if (cat && cat.displayName != null && cat.id != null && cat._id == null) {
       return {
         ...cat,
         url: cat.url || catalogUiUrl(project.url, cat.id),
@@ -1188,15 +1188,15 @@ export function buildAudit({
     return {
       id,
       name: cat.name || "",
-      displayName: cat.display_name || cat.name || "",
+      displayName: cat.display_name || cat.displayName || cat.name || "",
       type: cat.type || "",
       description: cat.description || "",
-      createdBy: cat.created_by_display_name || "",
-      created: cat.created ? new Date(cat.created * 1000).toISOString() : null,
-      url: catalogUiUrl(project.url, id),
-      used: false,
-      usedInMapping: false,
-      usageSummary: "—",
+      createdBy: cat.created_by_display_name || cat.createdBy || "",
+      created:
+        typeof cat.created === "number"
+          ? new Date(cat.created * 1000).toISOString()
+          : cat.created || null,
+      url: cat.url || catalogUiUrl(project.url, id),
     };
   });
 
@@ -2894,97 +2894,7 @@ async function loadLiveScenarios(loomi, project, toolErrors, { onProgress } = {}
   };
 }
 
-function summarizeCatalogUsages(usagePayload) {
-  const data = usagePayload?.used_by ? usagePayload : usagePayload?.data ?? usagePayload ?? {};
-  const usedBy = data.used_by ?? {};
-  const labels = {
-    scenarios: "scenarios",
-    recommendations: "recommendations",
-    email_campaigns: "email campaigns",
-    sms_campaigns: "SMS campaigns",
-    banners: "banners",
-    experiments: "experiments",
-    in_app_messages: "in-app messages",
-    surveys: "surveys",
-    other: "other",
-  };
-
-  let total = 0;
-  const parts = [];
-  const counts = {};
-  for (const [key, label] of Object.entries(labels)) {
-    const list = Array.isArray(usedBy[key]) ? usedBy[key] : [];
-    counts[key] = list.length;
-    total += list.length;
-    if (!list.length) continue;
-    const names = list
-      .map((item) =>
-        typeof item === "string"
-          ? item
-          : item?.name || item?.display_name || item?.title || item?.id || item?._id || ""
-      )
-      .filter(Boolean);
-    if (names.length && names.length <= 3) {
-      parts.push(`${label}: ${names.join(", ")}`);
-    } else if (names.length) {
-      parts.push(`${list.length} ${label} (${names.slice(0, 2).join(", ")}…)`);
-    } else {
-      parts.push(`${list.length} ${label}`);
-    }
-  }
-
-  const usedInMapping = Boolean(data.used_by_data_mapping);
-  return {
-    counts,
-    total,
-    usedInMapping,
-    source: "loomi",
-    summary: parts.length
-      ? parts.join("; ")
-      : usedInMapping
-        ? "Used in data mapping"
-        : "None",
-    used: total > 0 || usedInMapping,
-  };
-}
-
-function deriveCatalogUsages(catalogId, { mapping = null, recommendationCatalogRefs = [] } = {}) {
-  const parts = [];
-  const mapData = mapping?.data ?? mapping ?? {};
-  const mapped = mapData.catalogs ?? {};
-  const mainId = formatMappedValue(mapped.main);
-  const variantId = formatMappedValue(mapped.variant);
-  const usedInMapping = mainId === catalogId || variantId === catalogId;
-  if (usedInMapping) {
-    const roles = [];
-    if (mainId === catalogId) roles.push("main");
-    if (variantId === catalogId) roles.push("variant");
-    parts.push(`Data mapping (${roles.join(", ")})`);
-  }
-
-  const recHits = recommendationCatalogRefs.filter((r) => r.catalogId === catalogId);
-  if (recHits.length) {
-    const names = recHits.map((r) => r.engineName).filter(Boolean);
-    parts.push(
-      names.length <= 3
-        ? `recommendations: ${names.join(", ")}`
-        : `${recHits.length} recommendations (${names.slice(0, 2).join(", ")}…)`
-    );
-  }
-
-  return {
-    counts: { recommendations: recHits.length },
-    total: recHits.length + (usedInMapping ? 1 : 0),
-    usedInMapping,
-    source: "derived",
-    summary: parts.length
-      ? `${parts.join("; ")} (derived — Catalog V2 usage API unavailable)`
-      : "Usages unavailable (Catalog V2 API only)",
-    used: parts.length > 0,
-  };
-}
-
-async function loadCatalogs(loomi, project, mapping, toolErrors, { recommendationCatalogRefs = [], onProgress } = {}) {
+async function loadCatalogs(loomi, project, mapping, toolErrors, { onProgress } = {}) {
   const projectId = project.id;
   onProgress?.({ step: "catalogs", detail: "Listing catalogs…", percent: 82 });
   const listed = await callOptional(
@@ -3003,18 +2913,10 @@ async function loadCatalogs(loomi, project, mapping, toolErrors, { recommendatio
   // Resolve catalog IDs from data mapping (main / variant)
   const mapData = mapping?.data ?? mapping ?? {};
   const mappedCatalogs = mapData.catalogs ?? {};
-  const extraIds = new Set();
   for (const key of ["main", "variant"]) {
     const raw = mappedCatalogs[key];
     const id = formatMappedValue(raw) || (typeof raw === "string" ? raw : null);
-    if (id) extraIds.add(String(id));
-  }
-  for (const ref of recommendationCatalogRefs) {
-    if (ref?.catalogId) extraIds.add(String(ref.catalogId));
-  }
-
-  for (const id of extraIds) {
-    if (byId.has(id)) continue;
+    if (!id || byId.has(String(id))) continue;
     const detail = await callOptional(
       loomi,
       "search_catalogs",
@@ -3027,33 +2929,9 @@ async function loadCatalogs(loomi, project, mapping, toolErrors, { recommendatio
     if (resolvedId) byId.set(String(resolvedId), cat);
   }
 
-  const rows = [];
-  let index = 0;
-  for (const cat of byId.values()) {
-    index += 1;
+  const rows = [...byId.values()].map((cat) => {
     const id = String(cat._id || cat.id || "");
-    onProgress?.({
-      step: "catalogs",
-      detail: `Loading catalog usages (${index}/${byId.size})…`,
-      percent: 82 + Math.round((index / Math.max(byId.size, 1)) * 10),
-    });
-
-    const usageResult = await callOptional(
-      loomi,
-      "get_catalog_usages",
-      { project_id: projectId, catalog_id: id },
-      toolErrors,
-      { quiet: true }
-    );
-
-    let usages;
-    if (usageResult && (usageResult.used_by || usageResult.data?.used_by || usageResult.success)) {
-      usages = summarizeCatalogUsages(usageResult);
-    } else {
-      usages = deriveCatalogUsages(id, { mapping, recommendationCatalogRefs });
-    }
-
-    rows.push({
+    return {
       id,
       name: cat.name || "",
       displayName: cat.display_name || cat.name || id,
@@ -3062,13 +2940,8 @@ async function loadCatalogs(loomi, project, mapping, toolErrors, { recommendatio
       createdBy: cat.created_by_display_name || "",
       created: cat.created ? new Date(cat.created * 1000).toISOString() : null,
       url: catalogUiUrl(project.url, id),
-      usages,
-      used: Boolean(usages.used),
-      usedInMapping: Boolean(usages.usedInMapping),
-      usageSummary: usages.summary,
-      usageSource: usages.source,
-    });
-  }
+    };
+  });
 
   return {
     available: true,
@@ -3214,7 +3087,6 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
   };
 
   const catalogResult = await loadCatalogs(loomi, project, mapping, toolErrors, {
-    recommendationCatalogRefs: [],
     onProgress,
   });
 

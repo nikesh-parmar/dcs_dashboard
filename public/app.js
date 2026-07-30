@@ -2923,12 +2923,10 @@ function renderCatalogsTable(rows) {
           }
         </td>
         <td>${escapeHtml(row.type || "—")}</td>
-        <td>${pill(Boolean(row.used))}</td>
-        <td>${escapeHtml(row.usageSummary || "—")}</td>
       </tr>`
         )
         .join("")
-    : emptyTable(4, "No catalogs returned for this project");
+    : emptyTable(2, "No catalogs returned for this project");
 }
 
 function renderImportsTable(rows) {

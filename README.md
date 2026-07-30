@@ -104,7 +104,7 @@ If OAuth fails, confirm `HOST`/`PORT` match the URL you opened and that your Loo
 - **Data quality** — schema name vs declared type, cross-event type conflicts, sampled customer property values
 - **Data expiry** — note only (expiration settings are not exposed via Loomi)
 - **Data mapping** — events, customer attributes, catalogs, consents
-- **Catalogs** — list + best-effort usages
+- **Catalogs** — list catalogs (no per-catalog usage checks)
 - **Imports** — placeholder / Engagement link (not listable via Loomi)
 - **Findings** — rule-based severity-tagged issues from schema, mapping, and consent
 - **AI recommendations (Glean)** — optional narratives that rewrite / prioritize those findings using Glean chat + related docs (does not invent new schema issues)
@@ -154,7 +154,7 @@ Above the overview: short client summary, vertical, and related Documents (track
 
 **Quality samples:** `list_customers`, `get_customer_properties`
 
-**Catalogs:** `search_catalogs`, `get_catalog_usages`
+**Catalogs:** `search_catalogs`
 
 **Activation:** `search_scenarios`, `search_banners`, `search_email_campaigns`, `search_sms_campaigns`, `search_in_app_messages`, `search_recommendations`, `search_predictions`, `search_autosegments`
 
