@@ -34,6 +34,12 @@ const els = {
   loomiAssistantClose: document.getElementById("loomiAssistantClose"),
   hubPillarNav: document.getElementById("hubPillarNav"),
   backToHubBtn: document.getElementById("backToHubBtn"),
+  deliverabilityRange: document.getElementById("deliverabilityRange"),
+  deliverabilityRangeLabel: document.getElementById("deliverabilityRangeLabel"),
+  deliverabilityKpis: document.getElementById("deliverabilityKpis"),
+  deliverabilityChart: document.getElementById("deliverabilityChart"),
+  deliverabilityChartNote: document.getElementById("deliverabilityChartNote"),
+  deliverabilityNote: document.getElementById("deliverabilityNote"),
   kpiData: document.getElementById("kpiData"),
   channelAdoptionSummary: document.getElementById("channelAdoptionSummary"),
   channelAdoptionNote: document.getElementById("channelAdoptionNote"),
@@ -665,6 +671,7 @@ function renderAudit(data) {
   renderNextBestActions(data.aiInsights || null, data.adoptionOpportunities || []);
   renderUseCaseCenter(data.adoptionOpportunities || [], data.scenarios || [], data.verticalAssessment || null);
   renderDataQuality(data.dataQuality || {});
+  renderDeliverability(data.deliverability || null);
   renderSuccessPlanning(data);
   renderHubHome(data);
   renderEnablementAcademy(data.academyCourses || null);
@@ -1774,6 +1781,248 @@ function renderAttributesTable(rows) {
     : emptyTable(7, "No customer properties match filter");
 }
 
+function formatPercentRate(value, digits = 1) {
+  if (value == null || Number.isNaN(Number(value))) return "—";
+  const pct = Number(value) * 100;
+  if (pct < 0.1 && pct > 0) return `${pct.toFixed(2)}%`;
+  return `${pct.toFixed(digits)}%`;
+}
+
+function formatDeltaPp(delta, { invert = false } = {}) {
+  if (delta == null || Number.isNaN(Number(delta))) {
+    return { text: "—", className: "flat" };
+  }
+  const value = Number(delta);
+  const arrow = value > 0 ? "↑" : value < 0 ? "↓" : "→";
+  const text = `${arrow} ${Math.abs(value).toFixed(Math.abs(value) < 0.1 ? 2 : 1)} pp`;
+  if (value === 0) return { text, className: "flat" };
+  const positiveIsGood = !invert;
+  const good = positiveIsGood ? value > 0 : value < 0;
+  return { text, className: good ? "up-good" : "up-bad" };
+}
+
+function renderDeliverability(deliverability) {
+  const d = deliverability || {};
+  const current = d.current || {};
+  const deltas = d.deltas || {};
+  const compareLabel = d.previousRangeLabel
+    ? `vs ${d.previousRangeLabel}`
+    : "vs prior period";
+
+  if (els.deliverabilityRange && d.windowDays) {
+    els.deliverabilityRange.value = String(d.windowDays);
+  }
+  if (els.deliverabilityRangeLabel) {
+    els.deliverabilityRangeLabel.textContent = d.rangeLabel
+      ? `Showing ${d.rangeLabel}`
+      : "";
+  }
+  if (els.deliverabilityNote) {
+    els.deliverabilityNote.textContent = d.note || "";
+  }
+  if (els.deliverabilityChartNote) {
+    els.deliverabilityChartNote.textContent = Array.isArray(d.series) && d.series.length
+      ? "Daily"
+      : "Trend unavailable";
+  }
+
+  if (els.deliverabilityKpis) {
+    const cards = [
+      {
+        label: "Delivery rate",
+        icon: "✈",
+        tone: "delivery",
+        value: formatPercentRate(current.deliveryRate),
+        delta: formatDeltaPp(deltas.deliveryRatePp),
+      },
+      {
+        label: "Hard bounce rate",
+        icon: "🛡",
+        tone: "hard",
+        value: formatPercentRate(current.hardBounceRate, 2),
+        delta: formatDeltaPp(deltas.hardBounceRatePp, { invert: true }),
+      },
+      {
+        label: "Soft bounce rate",
+        icon: "✉",
+        tone: "soft",
+        value: formatPercentRate(current.softBounceRate, 2),
+        delta: formatDeltaPp(deltas.softBounceRatePp, { invert: true }),
+      },
+      {
+        label: "Complaint rate",
+        icon: "💬",
+        tone: "complaint",
+        value: formatPercentRate(current.complaintRate, 2),
+        delta: formatDeltaPp(deltas.complaintRatePp, { invert: true }),
+      },
+      {
+        label: "Open rate",
+        icon: "📬",
+        tone: "open",
+        value: formatPercentRate(current.openRate),
+        delta: formatDeltaPp(deltas.openRatePp),
+      },
+      {
+        label: "Click-through rate",
+        icon: "🖱",
+        tone: "click",
+        value: formatPercentRate(current.clickThroughRate),
+        delta: formatDeltaPp(deltas.clickThroughRatePp),
+      },
+    ];
+
+    els.deliverabilityKpis.innerHTML = cards
+      .map(
+        (card) => `
+      <article class="deliverability-kpi">
+        <div class="deliverability-kpi-top">
+          <span class="deliverability-kpi-label">${escapeHtml(card.label)}</span>
+          <span class="deliverability-kpi-icon ${escapeHtml(card.tone)}" aria-hidden="true">${card.icon}</span>
+        </div>
+        <div class="deliverability-kpi-value">${escapeHtml(card.value)}</div>
+        <div class="deliverability-kpi-delta ${escapeHtml(card.delta.className)}">${escapeHtml(
+          card.delta.text
+        )}</div>
+        <div class="deliverability-kpi-compare">${escapeHtml(compareLabel)}</div>
+      </article>`
+      )
+      .join("");
+  }
+
+  renderDeliverabilityChart(Array.isArray(d.series) ? d.series : [], current);
+}
+
+function renderDeliverabilityChart(series, current = {}) {
+  const root = els.deliverabilityChart;
+  if (!root) return;
+
+  if (!series.length) {
+    const delivered = current.delivered ?? 0;
+    const hard = current.hardBounces ?? 0;
+    const soft = current.softBounces ?? 0;
+    root.innerHTML = `
+      <p class="muted" style="margin:0 0 0.75rem">Daily trend series was not returned by Loomi for this project. Showing period totals instead.</p>
+      <div class="deliverability-kpi-grid">
+        <article class="deliverability-kpi"><span class="deliverability-kpi-label">Delivered</span><div class="deliverability-kpi-value">${formatNumber(
+          delivered
+        )}</div></article>
+        <article class="deliverability-kpi"><span class="deliverability-kpi-label">Hard bounces</span><div class="deliverability-kpi-value">${formatNumber(
+          hard
+        )}</div></article>
+        <article class="deliverability-kpi"><span class="deliverability-kpi-label">Soft bounces</span><div class="deliverability-kpi-value">${formatNumber(
+          soft
+        )}</div></article>
+      </div>`;
+    return;
+  }
+
+  const width = 720;
+  const height = 240;
+  const pad = { top: 16, right: 48, bottom: 36, left: 48 };
+  const innerW = width - pad.left - pad.right;
+  const innerH = height - pad.top - pad.bottom;
+  const maxDelivered = Math.max(...series.map((p) => p.delivered || 0), 1);
+  const maxRate = Math.max(
+    ...series.flatMap((p) => [
+      p.hardBounceRate || 0,
+      p.softBounceRate || 0,
+      p.complaintRate || 0,
+    ]),
+    0.01
+  );
+
+  const x = (i) => pad.left + (series.length === 1 ? innerW / 2 : (i / (series.length - 1)) * innerW);
+  const yVol = (v) => pad.top + innerH - (v / maxDelivered) * innerH;
+  const yRate = (v) => pad.top + innerH - (v / maxRate) * innerH;
+
+  const deliveredPath = series
+    .map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${yVol(p.delivered || 0).toFixed(1)}`)
+    .join(" ");
+  const areaPath = `${deliveredPath} L${x(series.length - 1).toFixed(1)},${(
+    pad.top + innerH
+  ).toFixed(1)} L${x(0).toFixed(1)},${(pad.top + innerH).toFixed(1)} Z`;
+  const hardPath = series
+    .map(
+      (p, i) =>
+        `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${yRate(p.hardBounceRate || 0).toFixed(1)}`
+    )
+    .join(" ");
+  const softPath = series
+    .map(
+      (p, i) =>
+        `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${yRate(p.softBounceRate || 0).toFixed(1)}`
+    )
+    .join(" ");
+  const complaintPath = series
+    .map(
+      (p, i) =>
+        `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${yRate(p.complaintRate || 0).toFixed(1)}`
+    )
+    .join(" ");
+
+  const tickIdx = [
+    0,
+    Math.floor((series.length - 1) / 2),
+    series.length - 1,
+  ].filter((v, i, arr) => arr.indexOf(v) === i);
+
+  root.innerHTML = `
+    <svg viewBox="0 0 ${width} ${height}" role="img">
+      <path d="${areaPath}" fill="rgba(124, 58, 237, 0.12)"></path>
+      <path d="${deliveredPath}" fill="none" stroke="#7c3aed" stroke-width="2.5"></path>
+      <path d="${hardPath}" fill="none" stroke="#0d9488" stroke-width="2"></path>
+      <path d="${softPath}" fill="none" stroke="#ca8a04" stroke-width="2"></path>
+      <path d="${complaintPath}" fill="none" stroke="#e11d48" stroke-width="2" stroke-dasharray="4 3"></path>
+      ${tickIdx
+        .map((i) => {
+          const label = String(series[i].date || "").slice(5);
+          return `<text x="${x(i).toFixed(1)}" y="${height - 10}" text-anchor="middle" font-size="11" fill="#6b7280">${escapeHtml(
+            label
+          )}</text>`;
+        })
+        .join("")}
+      <text x="8" y="18" font-size="11" fill="#6b7280">${formatNumber(maxDelivered)}</text>
+      <text x="${width - 8}" y="18" text-anchor="end" font-size="11" fill="#6b7280">${(
+        maxRate * 100
+      ).toFixed(1)}%</text>
+    </svg>
+    <div class="deliverability-legend">
+      <span><i class="deliverability-swatch" style="background:#7c3aed"></i>Delivered</span>
+      <span><i class="deliverability-swatch" style="background:#0d9488"></i>Hard bounces</span>
+      <span><i class="deliverability-swatch" style="background:#ca8a04"></i>Soft bounces</span>
+      <span><i class="deliverability-swatch" style="background:#e11d48"></i>Complaint rate</span>
+    </div>`;
+}
+
+let deliverabilityLoading = false;
+
+async function refreshDeliverabilityRange() {
+  if (!auditData?.project?.id || !els.deliverabilityRange || deliverabilityLoading) return;
+  const days = Number(els.deliverabilityRange.value) || 30;
+  deliverabilityLoading = true;
+  if (els.deliverabilityNote) {
+    els.deliverabilityNote.textContent = `Loading last ${days} days…`;
+  }
+  try {
+    const data = await api(
+      `/api/deliverability?projectId=${encodeURIComponent(auditData.project.id)}&days=${days}${
+        auditData.project.region
+          ? `&region=${encodeURIComponent(auditData.project.region)}`
+          : ""
+      }`
+    );
+    auditData.deliverability = data.deliverability;
+    renderDeliverability(data.deliverability);
+  } catch (err) {
+    if (els.deliverabilityNote) {
+      els.deliverabilityNote.textContent = err.message || "Failed to load deliverability.";
+    }
+  } finally {
+    deliverabilityLoading = false;
+  }
+}
+
 function renderDataQuality(dataQuality) {
   const dq = dataQuality || { issues: [], note: null, sampleSize: 0 };
   const issues = dq.issues || [];
@@ -2463,6 +2712,12 @@ if (els.backToHubBtn) {
 
 if (els.hubChatForm) {
   els.hubChatForm.addEventListener("submit", submitDocsChat);
+}
+
+if (els.deliverabilityRange) {
+  els.deliverabilityRange.addEventListener("change", () => {
+    refreshDeliverabilityRange().catch(() => {});
+  });
 }
 
 if (els.loomiAssistantToggle) {

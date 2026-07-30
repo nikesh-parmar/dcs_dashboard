@@ -224,13 +224,36 @@
               </div>
             </section>
             <section class="pillar-sub" id="sub-deliverability">
-              <h3>Deliverability Best Practices</h3>
+              <h3>Deliverability</h3>
               <div class="pillar-sub-body">
-                <ul class="practice-list">
-                  <li>Validate sender domains, SPF/DKIM/DMARC, and bounce handling in Engagement.</li>
-                  <li>Review consent categories and suppression lists before high-volume sends.</li>
-                  <li>Monitor open, click, and complaint rates on live automations.</li>
-                </ul>
+                <div class="deliverability-dash" id="deliverabilityDash">
+                  <div class="deliverability-dash-head">
+                    <div>
+                      <h4 class="deliverability-dash-title">Email deliverability — overview</h4>
+                      <p class="muted deliverability-dash-sub">
+                        Monitor email delivery performance across campaigns for the selected range.
+                      </p>
+                    </div>
+                    <label class="deliverability-range">
+                      Range
+                      <select id="deliverabilityRange" aria-label="Deliverability date range">
+                        <option value="7">Last 7 days</option>
+                        <option value="14">Last 14 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                      </select>
+                    </label>
+                  </div>
+                  <p id="deliverabilityRangeLabel" class="muted deliverability-range-label"></p>
+                  <div id="deliverabilityKpis" class="deliverability-kpi-grid"></div>
+                  <div class="deliverability-chart-card">
+                    <div class="deliverability-chart-head">
+                      <h4>Volume and delivery/bounce rates over time</h4>
+                      <span class="muted" id="deliverabilityChartNote">Daily</span>
+                    </div>
+                    <div id="deliverabilityChart" class="deliverability-chart" aria-label="Deliverability trend chart"></div>
+                  </div>
+                  <p id="deliverabilityNote" class="muted"></p>
+                </div>
               </div>
             </section>
           </div>
