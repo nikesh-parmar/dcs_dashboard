@@ -1325,6 +1325,7 @@ export function buildAudit({
       name: project.name,
       category: project.category,
       workspace: project.workspace_name,
+      region: project.region || null,
       url: engagementUrls.projectUrl || project.url,
       catalogsUrl: engagementUrls.catalogsUrl,
       importsUrl: engagementUrls.importsUrl,
