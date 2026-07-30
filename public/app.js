@@ -2915,6 +2915,7 @@ els.projectSelect.addEventListener("change", () => {
 
 els.auditBtn.addEventListener("click", runAudit);
 
+renderSuccessPlanning({});
 
 refreshStatus().catch((err) => setStatus(err.message, true));
 
