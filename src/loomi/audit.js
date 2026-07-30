@@ -1103,6 +1103,7 @@ export function buildAudit({
   weblayers = null,
   scenarioPerformance = null,
   eventVolumes = null,
+  deliverability = null,
   clientBrief = null,
   catalogsAvailable = true,
   propertySamples = null,
@@ -1324,6 +1325,7 @@ export function buildAudit({
       name: project.name,
       category: project.category,
       workspace: project.workspace_name,
+      region: project.region || null,
       url: engagementUrls.projectUrl || project.url,
       catalogsUrl: engagementUrls.catalogsUrl,
       importsUrl: engagementUrls.importsUrl,
@@ -1376,6 +1378,15 @@ export function buildAudit({
     scenarioPerformanceSummary: {
       windowDays: scenarioPerformance?.windowDays ?? 30,
       revenueAvailable: Boolean(scenarioPerformance?.revenueAvailable),
+    },
+    deliverability: deliverability || {
+      ok: false,
+      windowDays: 30,
+      current: {},
+      previous: {},
+      deltas: {},
+      series: [],
+      note: "Deliverability metrics not loaded.",
     },
     channels: channelUsage,
     personalization,
@@ -3178,6 +3189,13 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     toolErrors
   );
 
+  progress("deliverability", "Loading email deliverability metrics…", 62);
+  const { loadDeliverabilityMetrics } = await import("./deliverability.js");
+  const deliverability = await loadDeliverabilityMetrics(loomi, projectId, toolErrors, {
+    windowDays: 30,
+    onProgress,
+  });
+
   // Skipped: recommendation engines, predictions, and autosegments MCP loads.
   const recommendations = {
     engines: [],
@@ -3223,6 +3241,7 @@ export async function runProjectAudit(loomi, project, { onProgress, glean = null
     weblayers,
     scenarioPerformance,
     eventVolumes,
+    deliverability,
     clientBrief,
     propertySamples,
     toolErrors,

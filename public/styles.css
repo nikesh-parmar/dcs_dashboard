@@ -2477,6 +2477,190 @@ tbody tr:hover {
   font-size: 0.86rem;
 }
 
+.deliverability-dash {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.deliverability-dash-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.deliverability-dash-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.05rem;
+}
+
+.deliverability-dash-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.86rem;
+}
+
+.deliverability-range {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--br-muted);
+  min-width: 9.5rem;
+}
+
+.deliverability-range select {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+  padding: 0.55rem 0.7rem;
+}
+
+.deliverability-range-label {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.deliverability-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.deliverability-kpi {
+  background: #fff;
+  border: 1px solid var(--br-line);
+  border-radius: 14px;
+  padding: 0.8rem 0.85rem;
+  display: grid;
+  gap: 0.35rem;
+  box-shadow: var(--shadow);
+}
+
+.deliverability-kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.deliverability-kpi-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--br-muted);
+}
+
+.deliverability-kpi-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  background: #f3f4f6;
+}
+
+.deliverability-kpi-icon.delivery { background: #dcfce7; }
+.deliverability-kpi-icon.hard { background: #ffedd5; }
+.deliverability-kpi-icon.soft { background: #fef9c3; }
+.deliverability-kpi-icon.complaint { background: #fce7f3; }
+.deliverability-kpi-icon.open { background: #d1fae5; }
+.deliverability-kpi-icon.click { background: #ccfbf1; }
+
+.deliverability-kpi-value {
+  font-family: var(--display);
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--br-black);
+}
+
+.deliverability-kpi-delta {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.deliverability-kpi-delta.up-good { color: var(--br-ok); }
+.deliverability-kpi-delta.up-bad { color: var(--br-danger); }
+.deliverability-kpi-delta.flat { color: var(--br-muted); }
+
+.deliverability-kpi-compare {
+  font-size: 0.72rem;
+  color: var(--br-muted);
+}
+
+.deliverability-chart-card {
+  background: #fff;
+  border: 1px solid var(--br-line);
+  border-radius: 14px;
+  padding: 0.85rem 1rem 0.7rem;
+  box-shadow: var(--shadow);
+}
+
+.deliverability-chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.deliverability-chart-head h4 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.deliverability-chart {
+  width: 100%;
+  min-height: 220px;
+}
+
+.deliverability-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.deliverability-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  margin-top: 0.55rem;
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.deliverability-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.deliverability-swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+@media (max-width: 900px) {
+  .deliverability-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .deliverability-dash-head {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .deliverability-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .enablement-links a {
   font-weight: 600;
 }

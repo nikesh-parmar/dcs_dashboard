@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { loadConfig } from "./config.js";
 import { MultiRegionLoomi, parseMcpEndpoints } from "./loomi/multiClient.js";
 import { runProjectAudit } from "./loomi/audit.js";
+import { loadDeliverabilityMetrics } from "./loomi/deliverability.js";
 import { createGleanClient, fetchClientBrief } from "./glean/clientBrief.js";
 import { resolveUserIdentity } from "./loomi/userIdentity.js";
 import { answerDocsQuestion } from "./glean/docsChat.js";
@@ -297,6 +298,42 @@ app.post("/api/docs-chat", async (req, res) => {
     });
   } catch (err) {
     sendError(res, err, glean);
+  }
+});
+
+app.get("/api/deliverability", async (req, res) => {
+  try {
+    const projectId = typeof req.query.projectId === "string" ? req.query.projectId : "";
+    if (!projectId) {
+      return res.status(400).json({ error: "projectId is required" });
+    }
+    const daysRaw = Number(req.query.days);
+    const windowDays = [7, 14, 30].includes(daysRaw) ? daysRaw : 30;
+
+    let project = projectCache.get(projectId);
+    if (!project) {
+      project = {
+        id: projectId,
+        name: projectId,
+        category: "",
+        workspace_name: "",
+        url: "",
+        region: typeof req.query.region === "string" ? req.query.region : null,
+      };
+    }
+
+    const client = loomi.clientForProject(project);
+    if (!client) {
+      return res.status(401).json({ error: "No connected Loomi region for this project" });
+    }
+
+    const toolErrors = [];
+    const deliverability = await loadDeliverabilityMetrics(client, projectId, toolErrors, {
+      windowDays,
+    });
+    res.json({ deliverability, toolErrors });
+  } catch (err) {
+    sendError(res, err);
   }
 });
 
