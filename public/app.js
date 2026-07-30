@@ -17,6 +17,10 @@ const els = {
   dataQualitySummary: document.getElementById("dataQualitySummary"),
   dataQualityList: document.getElementById("dataQualityList"),
   successPlanningBody: document.getElementById("successPlanningBody"),
+  deliverabilityKpis: document.getElementById("deliverabilityKpis"),
+  deliverabilityNote: document.getElementById("deliverabilityNote"),
+  deliverabilityCampaignWrap: document.getElementById("deliverabilityCampaignWrap"),
+  deliverabilityCampaignTable: document.getElementById("deliverabilityCampaignTable"),
   serviceRecEmpty: document.getElementById("serviceRecEmpty"),
   hubHome: document.getElementById("hubHome"),
   hubAvatar: document.getElementById("hubAvatar"),
@@ -665,6 +669,7 @@ function renderAudit(data) {
   renderNextBestActions(data.aiInsights || null, data.adoptionOpportunities || []);
   renderUseCaseCenter(data.adoptionOpportunities || [], data.scenarios || [], data.verticalAssessment || null);
   renderDataQuality(data.dataQuality || {});
+  renderDeliverability(data.deliverability || null);
   renderSuccessPlanning(data);
   renderHubHome(data);
   renderEnablementAcademy(data.academyCourses || null);
@@ -1218,30 +1223,146 @@ function renderNextBestActions(ai, adoptionOpportunities = []) {
     .join("");
 }
 
+function renderDeliverability(deliverability) {
+  const root = els.deliverabilityKpis;
+  if (!root) return;
+  const d = deliverability || {};
+
+  renderKpiSection(
+    root,
+    [
+      ["Email sends (30d)", d.emailSends30d ?? "—"],
+      ["Hard bounces (30d)", d.hardBounces30d ?? "—"],
+      ["Hard bounce rate", formatPercent(d.hardBounceRate)],
+      ["Delivered (30d)", d.emailDelivered30d ?? "—"],
+      ["Delivery rate", formatPercent(d.deliveryRate)],
+      ["Soft bounces (30d)", d.softBounces30d ?? "—"],
+    ],
+    { compact: true }
+  );
+
+  if (els.deliverabilityNote) {
+    if (d.note) {
+      els.deliverabilityNote.textContent = d.note;
+    } else if (d.ok) {
+      els.deliverabilityNote.textContent =
+        "Loomi campaign events · last 30 days · email & transactional email";
+    } else {
+      els.deliverabilityNote.textContent =
+        "Deliverability metrics unavailable. Connect Loomi and reload the dashboard.";
+    }
+  }
+
+  const wrap = els.deliverabilityCampaignWrap;
+  const table = els.deliverabilityCampaignTable;
+  const campaigns = Array.isArray(d.topCampaigns) ? d.topCampaigns : [];
+  if (wrap && table) {
+    const tbody = table.querySelector("tbody");
+    if (!campaigns.length) {
+      wrap.classList.add("hidden");
+      if (tbody) tbody.innerHTML = "";
+    } else {
+      wrap.classList.remove("hidden");
+      tbody.innerHTML = campaigns
+        .map(
+          (row) => `
+        <tr>
+          <td>${escapeHtml(row.campaignName || "—")}</td>
+          <td>${formatNumber(row.sends)}</td>
+        </tr>`
+        )
+        .join("");
+    }
+  }
+}
+
 function renderSuccessPlanning(data) {
   const root = els.successPlanningBody;
   if (!root) return;
-  const brief = data.clientBrief || {};
-  const vertical = data.verticalAssessment || {};
-  const overview = brief.overview || data.overview || {};
-  const parts = [];
+  const ai = data.aiInsights || {};
+  let plans = Array.isArray(ai.successPlans) ? ai.successPlans.slice(0, 5) : [];
 
-  if (brief.overview || brief.summary) {
-    parts.push(`<p>${escapeHtml(brief.overview || brief.summary)}</p>`);
+  if (!plans.length) {
+    const adoption = filterGapAnalysisItems(data.adoptionOpportunities || []).slice(0, 5);
+    plans = adoption.map((item) => ({
+      title: item.title,
+      basedOn: item.scenario || item.area || item.title,
+      currentBenchmark: item.detail || "Gap identified in the project audit.",
+      expectedLift: `Impact: ${item.impact || "medium"}`,
+      bloomreachSolution:
+        item.action || "Implement via Bloomreach Engagement / Use Case Center.",
+      desiredOutcome: "Adopted use case with defined KPI and review cadence.",
+      effort: item.effort || "medium",
+      actionSteps: [
+        item.action || "Define scope and owner.",
+        "Confirm required events, consent, and catalog prerequisites.",
+        "Pilot with a limited audience, measure, then scale.",
+      ].filter(Boolean),
+    }));
   }
-  if (vertical.summary || vertical.headline) {
-    parts.push(`<p><strong>Vertical focus:</strong> ${escapeHtml(vertical.summary || vertical.headline)}</p>`);
-  }
-  if (overview.totalCustomers != null || overview.totalEvents != null) {
-    parts.push(
-      `<p class="muted">${formatNumber(overview.totalCustomers)} customers · ${formatNumber(overview.totalEvents)} events</p>`
-    );
-  }
-  if (!parts.length) {
-    root.innerHTML = `<p class="muted">No success-planning context yet. Connect Loomi and reload the dashboard for a client brief.</p>`;
+
+  if (!plans.length) {
+    const brief = data.clientBrief || {};
+    if (brief.overview || brief.summary || ai.summary) {
+      root.innerHTML = `<p class="muted">${escapeHtml(
+        ai.summary || brief.overview || brief.summary
+      )}</p><p class="muted">No best-action opportunities yet for a success plan. Reload after connecting Loomi.</p>`;
+      return;
+    }
+    root.innerHTML = `<p class="muted">${escapeHtml(
+      ai.error ||
+        (ai.needsAuth
+          ? "Loomi authentication required — use Connect in the header."
+          : "No success plans yet. Connect Loomi and reload the dashboard.")
+    )}</p>`;
     return;
   }
-  root.innerHTML = parts.join("");
+
+  root.innerHTML = plans
+    .map((plan, index) => {
+      const steps = Array.isArray(plan.actionSteps) ? plan.actionSteps : [];
+      const effort = String(plan.effort || "medium").toLowerCase();
+      return `
+      <article class="success-plan-card">
+        <div class="success-plan-head">
+          <span class="ai-insight-badge">Plan · #${index + 1}</span>
+          <span class="effort-pill effort-${escapeHtml(effort)}">${escapeHtml(effort)} effort</span>
+        </div>
+        <h3>${escapeHtml(plan.title || "Opportunity")}</h3>
+        ${
+          plan.basedOn && plan.basedOn !== plan.title
+            ? `<p class="muted ai-insight-based">Opportunity: ${escapeHtml(plan.basedOn)}</p>`
+            : ""
+        }
+        <dl class="success-plan-fields">
+          <div>
+            <dt>Current benchmark</dt>
+            <dd>${escapeHtml(plan.currentBenchmark || "—")}</dd>
+          </div>
+          <div>
+            <dt>Expected lift / value</dt>
+            <dd>${escapeHtml(plan.expectedLift || "—")}</dd>
+          </div>
+          <div>
+            <dt>Proposed Bloomreach solution</dt>
+            <dd>${escapeHtml(plan.bloomreachSolution || "—")}</dd>
+          </div>
+          <div>
+            <dt>Desired outcome / measurement</dt>
+            <dd>${escapeHtml(plan.desiredOutcome || "—")}</dd>
+          </div>
+        </dl>
+        ${
+          steps.length
+            ? `<div class="success-plan-steps">
+                <h4>Recommended actions</h4>
+                <ol>${steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ol>
+              </div>`
+            : ""
+        }
+      </article>`;
+    })
+    .join("");
 }
 
 function renderFindings(findings) {

@@ -224,8 +224,22 @@
               </div>
             </section>
             <section class="pillar-sub" id="sub-deliverability">
-              <h3>Deliverability Best Practices</h3>
+              <h3>Deliverability</h3>
               <div class="pillar-sub-body">
+                <p class="muted pillar-placeholder">Email send and hard-bounce metrics for the last 30 days from Loomi.</p>
+                <div id="deliverabilityKpis" class="kpi-grid kpi-grid-channels"></div>
+                <div id="deliverabilityNote" class="muted channel-note"></div>
+                <div class="table-wrap compact hidden" id="deliverabilityCampaignWrap">
+                  <table id="deliverabilityCampaignTable">
+                    <thead>
+                      <tr>
+                        <th>Campaign</th>
+                        <th>Sends (30d)</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
                 <ul class="practice-list">
                   <li>Validate sender domains, SPF/DKIM/DMARC, and bounce handling in Engagement.</li>
                   <li>Review consent categories and suppression lists before high-volume sends.</li>
@@ -284,7 +298,8 @@
             <section class="pillar-sub" id="sub-success-planning">
               <h3>Success Planning</h3>
               <div class="pillar-sub-body">
-                <div id="successPlanningBody" class="pillar-summary muted">Show the project dashboard to load success-planning context.</div>
+                <p class="muted pillar-placeholder">Recommended action plans for each best-action opportunity (from Loomi).</p>
+                <div id="successPlanningBody" class="success-plans-list">Show the project dashboard to load success-planning context.</div>
               </div>
             </section>
             <section class="pillar-sub" id="sub-support-escalation">
